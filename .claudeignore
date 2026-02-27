@@ -1,0 +1,19 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+# Logs
+[Ll]og/
+[Ll]ogs/
+
+# NuGet
+**/packages/
+
+# Test results
+[Tt]est[Rr]esult*/
