@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-application", "replo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-infrastructure", "replog-infrastructure\replog-infrastructure.csproj", "{FCA8212A-01B7-47E4-954C-6AD09BD2CE0D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-infrastructure.tests", "replog-infrastructure.tests\replog-infrastructure.tests.csproj", "{353BC65F-8EF2-4353-802C-572365DDE88F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,6 +68,18 @@ Global
 		{FCA8212A-01B7-47E4-954C-6AD09BD2CE0D}.Release|x64.Build.0 = Release|Any CPU
 		{FCA8212A-01B7-47E4-954C-6AD09BD2CE0D}.Release|x86.ActiveCfg = Release|Any CPU
 		{FCA8212A-01B7-47E4-954C-6AD09BD2CE0D}.Release|x86.Build.0 = Release|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Debug|x64.Build.0 = Debug|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Debug|x86.Build.0 = Debug|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Release|x64.ActiveCfg = Release|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Release|x64.Build.0 = Release|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Release|x86.ActiveCfg = Release|Any CPU
+		{353BC65F-8EF2-4353-802C-572365DDE88F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

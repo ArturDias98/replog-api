@@ -23,7 +23,7 @@ public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient) : IWorkoutReposit
             }
         });
 
-        return response.Item.Count == 0 ? null : MapToEntity(response.Item);
+        return response.Item is null || response.Item.Count == 0 ? null : MapToEntity(response.Item);
     }
 
     public async Task<List<WorkoutEntity>> GetByUserIdAsync(string userId)
@@ -52,7 +52,7 @@ public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient) : IWorkoutReposit
                     results.Add(entity);
             }
 
-            lastEvaluatedKey = response.LastEvaluatedKey.Count > 0 ? response.LastEvaluatedKey : null;
+            lastEvaluatedKey = response.LastEvaluatedKey is { Count: > 0 } ? response.LastEvaluatedKey : null;
         } while (lastEvaluatedKey != null);
 
         return results;

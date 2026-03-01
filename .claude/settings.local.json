@@ -6,7 +6,13 @@
       "Bash(dotnet add replog-infrastructure package AWSSDK.Extensions.NETCore.Setup)",
       "Bash(dotnet add replog-api package Microsoft.AspNetCore.Authentication.JwtBearer)",
       "Bash(dotnet add replog-api package FluentValidation.DependencyInjectionExtensions)",
-      "Bash(dotnet build)"
+      "Bash(dotnet build)",
+      "Bash(dotnet add package Testcontainers --version 4.3.0)",
+      "Bash(dotnet add package AWSSDK.DynamoDBv2 --version 4.0.15)",
+      "Bash(dotnet add reference ../replog-infrastructure/replog-infrastructure.csproj)",
+      "Bash(dotnet add reference ../replog-shared/replog-shared.csproj)",
+      "Bash(dotnet build replog-infrastructure.tests)",
+      "Bash(dotnet test replog-infrastructure.tests --verbosity normal)"
     ]
   }
 }
