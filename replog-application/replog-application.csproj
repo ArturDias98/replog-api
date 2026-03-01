@@ -4,6 +4,10 @@
     <ProjectReference Include="..\replog-shared\replog-shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>replog_application</RootNamespace>

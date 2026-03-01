@@ -7,9 +7,10 @@ Backend specification for the RepLog sync system. This API receives change event
 1. [Overview](#1-overview)
 2. [Data Model (DynamoDB)](#2-data-model-dynamodb)
 3. [API Endpoints](#3-api-endpoints)
-4. [Conflict Resolution](#4-conflict-resolution)
-5. [Authentication & Authorization](#5-authentication--authorization)
-6. [Security](#6-security)
+4. [Entity Processing](#4-entity-processing)
+5. [Conflict Resolution](#5-conflict-resolution)
+6. [Authentication & Authorization](#6-authentication--authorization)
+7. [Security](#7-security)
 
 ---
 
@@ -141,7 +142,6 @@ Receives a batch of changes from the client and applies them.
     {
       "id": "change-uuid",
       "entityType": "workout",
-      "entityId": "entity-uuid",
       "action": "CREATE",
       "timestamp": "2026-02-25T10:00:00.000Z",
       "data": {
@@ -150,8 +150,7 @@ Receives a batch of changes from the client and applies them.
         "date": "2026-02-25",
         "userId": "user-123",
         "orderIndex": 0
-      },
-      "parentId": null
+      }
     }
   ],
   "lastSyncedAt": "2026-02-24T20:00:00.000Z"
@@ -190,6 +189,8 @@ Receives a batch of changes from the client and applies them.
 3. Process each change sequentially (ordered by `timestamp`).
 4. Apply each change to the database. Idempotency is inherent (duplicate CREATEs are skipped, UPDATEs use timestamp comparison, DELETEs check `deletedAt`).
 5. Return acknowledged IDs, conflicts, and current server timestamp.
+
+See [Section 4 — Entity Processing](#4-entity-processing) for details on how each entity type is handled.
 
 ### 3.2 `GET /api/sync/pull`
 
@@ -246,13 +247,231 @@ Returns all workouts for the authenticated user, as nested `WorkOutGroup[]`.
 
 ---
 
-## 4. Conflict Resolution
+## 4. Entity Processing
 
-### 4.1 Strategy: Last-Write-Wins (per workout)
+All entity mutations resolve to reading and writing a workout document. Child entity changes (muscleGroup, exercise, log) require the backend to locate the parent workout, navigate to the nested object, apply the change, and save the updated document.
+
+### Parent Workout Resolution
+
+All child entity payloads include `workoutId`, enabling direct lookup of the parent workout document.
+
+- **muscleGroup**: `data.workoutId` → direct `GetItem` by partition key.
+- **exercise**: `data.workoutId` → direct `GetItem`, then find muscle group by `data.muscleGroupId` in `muscleGroup[]`.
+- **log**: `data.workoutId` → direct `GetItem`, then find muscle group by `data.muscleGroupId` in `muscleGroup[]`, then find exercise by `data.exerciseId` in `exercises[]`.
+
+### 4.1 Workout
+
+| Action | Processing |
+|---|---|
+| **CREATE** | Insert a new DynamoDB item with `data.id`, `userId` (from auth token), `title`, `date`, `orderIndex`, empty `muscleGroup: []`, and sync metadata (`createdAt = timestamp`, `updatedAt = timestamp`). If an item with the same `data.id` already exists, skip (duplicate). |
+| **UPDATE** | Get item by `data.id`. Verify `userId` matches. If `deletedAt` is set, skip. If `updatedAt > change.timestamp`, skip and return conflict with server version. Otherwise, apply changed fields (`title`, `date`, `orderIndex`) and set `updatedAt = change.timestamp`. |
+| **DELETE** | Get item by `data.id`. Verify `userId` matches. If item doesn't exist or `deletedAt` is already set, skip. Otherwise, set `deletedAt = change.timestamp`. All nested children (muscle groups, exercises, logs) are implicitly deleted with the document. |
+
+**CREATE payload:**
+
+```json
+{
+  "id": "w-uuid-1",
+  "title": "Push Day",
+  "date": "2026-02-25",
+  "userId": "user-123",
+  "orderIndex": 0
+}
+```
+
+**UPDATE payload:**
+
+```json
+{
+  "id": "w-uuid-1",
+  "title": "Pull Day",
+  "date": "2026-02-26",
+  "orderIndex": 2
+}
+```
+
+**DELETE payload:**
+
+```json
+{
+  "id": "w-uuid-1"
+}
+```
+
+### 4.2 Muscle Group
+
+All operations fetch the parent workout document and modify the nested `muscleGroup[]` array.
+
+| Action | Processing |
+|---|---|
+| **CREATE** | Get workout by `data.workoutId`. Verify `userId` matches. If workout is deleted or not found, reject as orphaned. Check that no muscle group with the same `data.id` already exists in the array — if it does, skip. Append the new muscle group object to `muscleGroup[]`. Set `updatedAt = change.timestamp` on the workout. Save. |
+| **UPDATE** | Get workout by `data.workoutId`. Find the muscle group in `muscleGroup[]` by `data.id`. If not found or workout is deleted, skip. If `workout.updatedAt > change.timestamp`, skip and return conflict. Apply changed fields (`title`, `date`, `orderIndex`). Set `updatedAt = change.timestamp` on the workout. Save. |
+| **DELETE** | Get workout by `data.workoutId`. Find the muscle group in `muscleGroup[]` by `data.id`. If not found or workout is deleted, skip. Remove the muscle group (and all its nested exercises and logs) from the array. Set `updatedAt = change.timestamp` on the workout. Save. |
+
+**CREATE payload:**
+
+```json
+{
+  "id": "mg-uuid-1",
+  "workoutId": "w-uuid-1",
+  "title": "Chest",
+  "date": "2026-02-25",
+  "orderIndex": 0
+}
+```
+
+**UPDATE payload:**
+
+```json
+{
+  "id": "mg-uuid-1",
+  "workoutId": "w-uuid-1",
+  "title": "Back",
+  "date": "2026-02-26",
+  "orderIndex": 1
+}
+```
+
+**DELETE payload:**
+
+```json
+{
+  "id": "mg-uuid-1",
+  "workoutId": "w-uuid-1"
+}
+```
+
+### 4.3 Exercise
+
+Operations get the parent workout by `data.workoutId`, find the muscle group by `data.muscleGroupId`, then operate on the `exercises[]` array.
+
+| Action | Processing |
+|---|---|
+| **CREATE** | Get workout by `data.workoutId`. Find the muscle group by `data.muscleGroupId` in `muscleGroup[]`. Verify `userId` matches. If the workout is deleted or the muscle group is not found, reject as orphaned. Check that no exercise with the same `data.id` already exists — if it does, skip. Append the new exercise object (with empty `log: []`) to the muscle group's `exercises[]`. Set `updatedAt = change.timestamp` on the workout. Save. |
+| **UPDATE** | Get workout by `data.workoutId`. Find the muscle group by `data.muscleGroupId`, then the exercise by `data.id`. If not found or workout is deleted, skip. If `workout.updatedAt > change.timestamp`, skip and return conflict. Apply changed fields (`title`, `orderIndex`). Set `updatedAt = change.timestamp` on the workout. Save. |
+| **DELETE** | Get workout by `data.workoutId`. Find the muscle group by `data.muscleGroupId`, then the exercise by `data.id`. If not found or workout is deleted, skip. Remove the exercise (and all its nested logs) from the `exercises[]` array. Set `updatedAt = change.timestamp` on the workout. Save. |
+
+**CREATE payload:**
+
+```json
+{
+  "id": "ex-uuid-1",
+  "workoutId": "w-uuid-1",
+  "muscleGroupId": "mg-uuid-1",
+  "title": "Bench Press",
+  "orderIndex": 0
+}
+```
+
+**UPDATE payload:**
+
+```json
+{
+  "id": "ex-uuid-1",
+  "workoutId": "w-uuid-1",
+  "muscleGroupId": "mg-uuid-1",
+  "title": "Incline Bench Press",
+  "orderIndex": 2
+}
+```
+
+**DELETE payload:**
+
+```json
+{
+  "id": "ex-uuid-1",
+  "workoutId": "w-uuid-1",
+  "muscleGroupId": "mg-uuid-1"
+}
+```
+
+### 4.4 Log
+
+Operations get the parent workout by `data.workoutId`, find the muscle group by `data.muscleGroupId`, find the exercise by `data.exerciseId`, then operate on the `log[]` array.
+
+| Action | Processing |
+|---|---|
+| **CREATE** | Get workout by `data.workoutId`. Find the muscle group by `data.muscleGroupId`, then the exercise by `data.exerciseId`. Verify `userId` matches. If the workout is deleted or the exercise is not found, reject as orphaned. Check that no log with the same `data.id` already exists — if it does, skip. Append the new log object to the exercise's `log[]`. Set `updatedAt = change.timestamp` on the workout. Save. |
+| **UPDATE** | Get workout by `data.workoutId`. Find the muscle group by `data.muscleGroupId`, then the exercise by `data.exerciseId`, then the log by `data.id`. If not found or workout is deleted, skip. If `workout.updatedAt > change.timestamp`, skip and return conflict. Apply changed fields (`numberReps`, `maxWeight`). Set `updatedAt = change.timestamp` on the workout. Save. |
+| **DELETE** | Get workout by `data.workoutId`. Find the muscle group by `data.muscleGroupId`, then the exercise by `data.exerciseId`, then the log by `data.id`. If not found or workout is deleted, skip. Remove the log from the `log[]` array. Set `updatedAt = change.timestamp` on the workout. Save. |
+
+**CREATE payload:**
+
+```json
+{
+  "id": "log-uuid-1",
+  "workoutId": "w-uuid-1",
+  "muscleGroupId": "mg-uuid-1",
+  "exerciseId": "ex-uuid-1",
+  "numberReps": 10,
+  "maxWeight": 80,
+  "date": "2026-02-25T10:00:00.000Z"
+}
+```
+
+**UPDATE payload:**
+
+```json
+{
+  "id": "log-uuid-1",
+  "workoutId": "w-uuid-1",
+  "muscleGroupId": "mg-uuid-1",
+  "exerciseId": "ex-uuid-1",
+  "numberReps": 12,
+  "maxWeight": 85
+}
+```
+
+**DELETE payload:**
+
+```json
+{
+  "id": "log-uuid-1",
+  "workoutId": "w-uuid-1",
+  "muscleGroupId": "mg-uuid-1",
+  "exerciseId": "ex-uuid-1"
+}
+```
+
+### 4.5 Processing Summary
+
+```text
+1. Resolve the parent workout (using fields from data payload):
+   - workout → lookup by data.id
+   - muscleGroup → lookup workout by data.workoutId
+   - exercise → lookup workout by data.workoutId, find muscleGroup by data.muscleGroupId
+   - log → lookup workout by data.workoutId, find muscleGroup by data.muscleGroupId,
+            find exercise by data.exerciseId
+
+2. Validate:
+   - Workout exists and belongs to authenticated user
+   - Workout is not soft-deleted
+   - For child entities: parent node exists in the nested structure
+
+3. Check idempotency:
+   - CREATE: skip if entity with same data.id already exists
+   - UPDATE: skip if workout.updatedAt > change.timestamp (return conflict)
+   - DELETE: skip if entity not found
+
+4. Apply mutation:
+   - CREATE: append to parent array
+   - UPDATE: modify fields in-place
+   - DELETE: remove from parent array (cascades nested children)
+
+5. Set workout.updatedAt = change.timestamp
+
+6. Save the workout document back to DynamoDB
+```
+
+---
+
+## 5. Conflict Resolution
+
+### 5.1 Strategy: Last-Write-Wins (per workout)
 
 Since the entire workout is stored as a single document, conflict resolution happens at the workout level. The version with the later `updatedAt` timestamp wins.
 
-### 4.2 Rules
+### 5.2 Rules
 
 | Scenario | Resolution |
 |---|---|
@@ -266,7 +485,7 @@ Since the entire workout is stored as a single document, conflict resolution hap
 | DELETE — parent workout deleted | Skip |
 | DELETE — entity exists | Remove from document |
 
-### 4.3 Conflict Response Format
+### 5.3 Conflict Response Format
 
 ```json
 {
@@ -282,33 +501,33 @@ Since the entire workout is stored as a single document, conflict resolution hap
 
 ---
 
-## 5. Authentication & Authorization
+## 6. Authentication & Authorization
 
-### 5.1 Authentication
+### 6.1 Authentication
 
 - All endpoints require a valid Google Auth JWT in the `Authorization` header: `Bearer <token>`.
 - Validate the JWT against Google's public keys.
 - Extract `userId` (Google `sub` claim) from the token.
 - No user table or profile item needed — the `userId` from the JWT is stored as an attribute on each workout item.
 
-### 5.2 Authorization
+### 6.2 Authorization
 
 - **Push:** For CREATE, the backend sets `userId` from the auth token. For UPDATE/DELETE, the backend verifies `workout.userId` matches the authenticated user before applying changes.
 - **Pull/Full:** GSI query uses `userId` from the auth token — only the user's own data is returned.
 
-### 5.3 User ID Override
+### 6.3 User ID Override
 
 The backend **ignores** the `userId` field in client data and always derives it from the auth token.
 
 ---
 
-## 6. Security
+## 7. Security
 
-### 6.1 Transport
+### 7.1 Transport
 
 - All endpoints must be served over HTTPS.
 
-### 6.2 Input Validation
+### 7.2 Input Validation
 
 - Validate all incoming fields against the expected schema (types, required fields, string lengths).
 - Reject unknown `entityType` values.
@@ -316,12 +535,12 @@ The backend **ignores** the `userId` field in client data and always derives it 
 - Sanitize text fields (titles) to prevent stored XSS.
 - Maximum string lengths: `title` — 200 chars, `date` — 10 chars (YYYY-MM-DD).
 
-### 6.3 Rate Limiting
+### 7.3 Rate Limiting
 
 - Max 10 sync requests per minute per user.
 - Max 100 changes per push request.
 
-### 6.4 Idempotency
+### 7.4 Idempotency
 
 Push is inherently idempotent — no separate tracking needed:
 
@@ -329,6 +548,6 @@ Push is inherently idempotent — no separate tracking needed:
 - **UPDATE:** Timestamp comparison ensures stale updates are rejected.
 - **DELETE:** If already deleted (`deletedAt` set), the change is skipped.
 
-### 6.5 Cleanup
+### 7.5 Cleanup
 
 - Periodically purge soft-deleted workout items older than a configurable threshold (e.g., 90 days).
