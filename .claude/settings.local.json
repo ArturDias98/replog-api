@@ -5,7 +5,8 @@
       "Bash(dotnet add replog-infrastructure package AWSSDK.DynamoDBv2)",
       "Bash(dotnet add replog-infrastructure package AWSSDK.Extensions.NETCore.Setup)",
       "Bash(dotnet add replog-api package Microsoft.AspNetCore.Authentication.JwtBearer)",
-      "Bash(dotnet add replog-api package FluentValidation.DependencyInjectionExtensions)"
+      "Bash(dotnet add replog-api package FluentValidation.DependencyInjectionExtensions)",
+      "Bash(dotnet build)"
     ]
   }
 }

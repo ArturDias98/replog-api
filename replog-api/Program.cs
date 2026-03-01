@@ -1,13 +1,10 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
-using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using replog_api.Endpoints;
 using replog_api.Middleware;
-using replog_application.Interfaces;
-using replog_application.Services;
-using replog_application.Validators;
+using replog_application;
 using replog_infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,13 +42,7 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
-// FluentValidation
-builder.Services.AddValidatorsFromAssemblyContaining<PushSyncRequestValidator>();
-
-// Application services
-builder.Services.AddScoped<ISyncService, SyncService>();
-
-// Infrastructure
+builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
 var app = builder.Build();
