@@ -3,7 +3,7 @@ using Amazon.DynamoDBv2.Model;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 
-namespace replog_infrastructure.tests.Fixtures;
+namespace replog_tests_shared.Fixtures;
 
 public class DynamoDbFixture : IAsyncLifetime
 {

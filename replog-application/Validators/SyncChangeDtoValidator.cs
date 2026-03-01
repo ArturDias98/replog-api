@@ -12,10 +12,13 @@ public class SyncChangeDtoValidator : AbstractValidator<SyncChangeDto>
             .NotEmpty().WithMessage("Change id is required.");
 
         RuleFor(x => x.EntityType)
-            .IsInEnum().WithMessage("Invalid entity type.");
+            .Must(x => x is EntityType.Workout or EntityType.MuscleGroup
+                    or EntityType.Exercise or EntityType.Log)
+            .WithMessage("Entity type must be one of: workout, muscleGroup, exercise, log.");
 
         RuleFor(x => x.Action)
-            .IsInEnum().WithMessage("Invalid action.");
+            .Must(x => x is ChangeAction.Create or ChangeAction.Update or ChangeAction.Delete)
+            .WithMessage("Action must be one of: CREATE, UPDATE, DELETE.");
 
         RuleFor(x => x.Timestamp)
             .NotEmpty().WithMessage("Timestamp is required.");

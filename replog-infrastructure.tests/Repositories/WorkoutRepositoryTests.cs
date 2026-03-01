@@ -1,6 +1,6 @@
 using replog_infrastructure.Repositories;
-using replog_infrastructure.tests.Fixtures;
 using replog_shared.Models.Entities;
+using replog_tests_shared.Fixtures;
 
 namespace replog_infrastructure.tests.Repositories;
 
