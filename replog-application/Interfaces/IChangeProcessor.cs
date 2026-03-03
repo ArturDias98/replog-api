@@ -1,5 +1,4 @@
 using replog_shared.Enums;
-using replog_domain.Entities;
 using replog_shared.Models.Requests;
 using replog_shared.Models.Responses;
 
@@ -9,10 +8,8 @@ public interface IChangeProcessor
 {
     EntityType EntityType { get; }
 
-    void Process(
+    Task ProcessAsync(
         SyncChangeDto change,
         string userId,
-        Dictionary<string, WorkoutEntity> workoutCache,
-        HashSet<string> dirtyWorkouts,
         PushSyncResponse response);
 }

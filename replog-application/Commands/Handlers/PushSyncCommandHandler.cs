@@ -7,7 +7,6 @@ using replog_shared.Models.Responses;
 namespace replog_application.Commands.Handlers;
 
 public class PushSyncCommandHandler(
-    IWorkoutRepository workoutRepository,
     IValidator<PushSyncRequest> pushValidator,
     IEnumerable<IChangeProcessor> changeProcessors) : ICommandHandler<PushSyncCommand, PushSyncResponse>
 {
@@ -20,25 +19,13 @@ public class PushSyncCommandHandler(
 
         var response = new PushSyncResponse { ServerTimestamp = DateTime.UtcNow };
 
-        var userWorkouts = await workoutRepository.GetByUserIdAsync(command.UserId);
-        var workoutCache = userWorkouts.ToDictionary(w => w.Id);
-        var dirtyWorkouts = new HashSet<string>();
-
         var orderedChanges = command.Request.Changes.OrderBy(c => c.Timestamp);
 
         foreach (var change in orderedChanges)
         {
             if (_processors.TryGetValue(change.EntityType, out var processor))
             {
-                processor.Process(change, command.UserId, workoutCache, dirtyWorkouts, response);
-            }
-        }
-
-        foreach (var workoutId in dirtyWorkouts)
-        {
-            if (workoutCache.TryGetValue(workoutId, out var workout))
-            {
-                await workoutRepository.PutAsync(workout);
+                await processor.ProcessAsync(change, command.UserId, response);
             }
         }
 
