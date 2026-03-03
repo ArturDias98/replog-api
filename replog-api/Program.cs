@@ -42,6 +42,20 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        var origins = builder.Environment.IsDevelopment()
+            ? new[] { "http://localhost:4200" }
+            : new[] { "https://replog.adrvcode.com" };
+
+        policy.WithOrigins(origins)
+            .WithHeaders("Authorization", "Content-Type")
+            .WithMethods("GET", "POST");
+    });
+});
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
@@ -54,6 +68,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<ValidationExceptionHandler>();
 app.UseHttpsRedirection();
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
