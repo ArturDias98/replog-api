@@ -23,6 +23,7 @@
     <ProjectReference Include="..\replog-infrastructure\replog-infrastructure.csproj" />
     <ProjectReference Include="..\replog-shared\replog-shared.csproj" />
     <ProjectReference Include="..\replog-tests-shared\replog-tests-shared.csproj" />
+    <ProjectReference Include="..\replog-domain\replog-domain.csproj" />
   </ItemGroup>
 
 </Project>

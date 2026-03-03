@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\replog-shared\replog-shared.csproj" />
+    <ProjectReference Include="..\replog-domain\replog-domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

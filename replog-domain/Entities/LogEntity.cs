@@ -1,4 +1,4 @@
-namespace replog_shared.Models.Entities;
+namespace replog_domain.Entities;
 
 public class LogEntity
 {

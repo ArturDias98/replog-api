@@ -1,4 +1,4 @@
-using replog_shared.Models.Entities;
+using replog_domain.Entities;
 
 namespace replog_application.Interfaces;
 

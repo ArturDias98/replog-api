@@ -12,7 +12,8 @@ When you need project requirements, API contracts, or sync behavior details, fet
 ```
 replog-api.sln
 ├── replog-api/            # ASP.NET Web API — controllers, middleware, DI setup
-├── replog-shared/         # Shared models: API response DTOs, common enums/constants
+├── replog-domain/         # Domain entities (no dependencies)
+├── replog-shared/         # Shared models: API response DTOs, request models, enums, JSON utils
 ├── replog-application/    # Business logic layer: service/repository abstractions, CQRS commands & queries
 └── replog-infrastructure/ # Implementations: database access, external services, repositories
 ```
@@ -20,14 +21,19 @@ replog-api.sln
 ### Project Responsibilities
 
 - **replog-api**: Entry point. Registers services, configures middleware, defines endpoints. References `replog-application` and `replog-infrastructure`.
-- **replog-shared**: Lightweight library with no project dependencies. Contains models shared across projects (API response/request DTOs, enums). Referenced by all other projects.
-- **replog-application**: Defines interfaces (`IService`, `IRepository`), command/query models (CQRS pattern) for creating and reading data. References `replog-shared`. No infrastructure dependencies.
-- **replog-infrastructure**: Implements `replog-application` interfaces. Contains EF Core DbContext, repository implementations, external service clients. References `replog-application` and `replog-shared`.
+- **replog-domain**: Domain entities (`WorkoutEntity`, `MuscleGroupEntity`, `ExerciseEntity`, `LogEntity`). No project dependencies.
+- **replog-shared**: Lightweight library with no project dependencies. Contains models shared across projects (API response/request DTOs, sync models, enums). Referenced by all other projects.
+- **replog-application**: Defines interfaces (`IService`, `IRepository`), command/query models (CQRS pattern) for creating and reading data. References `replog-domain` and `replog-shared`. No infrastructure dependencies.
+- **replog-infrastructure**: Implements `replog-application` interfaces. Contains DynamoDB repository implementations and external service clients. References `replog-application` and `replog-shared`.
 
 ### Dependency Flow
 
 ```
-replog-api → replog-infrastructure → replog-application → replog-shared
+replog-domain    (no dependencies)
+replog-shared    (no dependencies)
+replog-application → replog-domain, replog-shared
+replog-infrastructure → replog-application, replog-shared
+replog-api → replog-infrastructure, replog-application, replog-shared
 ```
 
 No reverse dependencies. Application layer must never reference Infrastructure or API.

@@ -18,4 +18,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\replog-domain\replog-domain.csproj" />
+  </ItemGroup>
+
 </Project>

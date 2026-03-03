@@ -1,4 +1,4 @@
-using replog_shared.Models.Entities;
+using replog_domain.Entities;
 using replog_shared.Models.Responses;
 
 namespace replog_application.Mappers;

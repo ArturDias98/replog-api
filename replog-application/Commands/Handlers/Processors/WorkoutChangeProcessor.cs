@@ -2,7 +2,7 @@ using FluentValidation;
 using replog_application.Interfaces;
 using replog_application.Mappers;
 using replog_shared.Enums;
-using replog_shared.Models.Entities;
+using replog_domain.Entities;
 using replog_shared.Models.Requests;
 using replog_shared.Models.Responses;
 using replog_shared.Models.Sync.Workout;

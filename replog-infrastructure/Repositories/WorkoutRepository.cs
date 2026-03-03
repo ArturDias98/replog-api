@@ -3,7 +3,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using replog_application.Interfaces;
 using replog_shared.Json;
-using replog_shared.Models.Entities;
+using replog_domain.Entities;
 
 namespace replog_infrastructure.Repositories;
 

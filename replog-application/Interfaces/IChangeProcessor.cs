@@ -1,5 +1,5 @@
 using replog_shared.Enums;
-using replog_shared.Models.Entities;
+using replog_domain.Entities;
 using replog_shared.Models.Requests;
 using replog_shared.Models.Responses;
 

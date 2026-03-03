@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-application.tests", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D2D31961-9576-4768-970C-6D69B5151F55}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-domain", "replog-domain\replog-domain.csproj", "{65013B79-8310-4FC9-87ED-2F97352F7BE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,13 +112,25 @@ Global
 		{CD7BB9B8-9192-4414-9413-3F9047EBBEDC}.Release|x64.Build.0 = Release|Any CPU
 		{CD7BB9B8-9192-4414-9413-3F9047EBBEDC}.Release|x86.ActiveCfg = Release|Any CPU
 		{CD7BB9B8-9192-4414-9413-3F9047EBBEDC}.Release|x86.Build.0 = Release|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Debug|x64.Build.0 = Debug|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Debug|x86.Build.0 = Debug|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Release|x64.ActiveCfg = Release|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Release|x64.Build.0 = Release|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Release|x86.ActiveCfg = Release|Any CPU
+		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{353BC65F-8EF2-4353-802C-572365DDE88F} = {D2D31961-9576-4768-970C-6D69B5151F55}
 		{59B31D22-B59B-4806-82F7-CD6E45EA886D} = {D2D31961-9576-4768-970C-6D69B5151F55}
 		{CD7BB9B8-9192-4414-9413-3F9047EBBEDC} = {D2D31961-9576-4768-970C-6D69B5151F55}
-		{353BC65F-8EF2-4353-802C-572365DDE88F} = {D2D31961-9576-4768-970C-6D69B5151F55}
 	EndGlobalSection
 EndGlobal
