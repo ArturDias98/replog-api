@@ -7,7 +7,7 @@ public class WorkoutEntity
     public required string Title { get; set; }
     public required string Date { get; set; }
     public int OrderIndex { get; set; }
-    public List<MuscleGroupEntity> MuscleGroup { get; set; } = [];
+    public Dictionary<string, MuscleGroupEntity> MuscleGroup { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }

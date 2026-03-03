@@ -30,11 +30,11 @@ public class LogChangeProcessor(
                 if (!workoutCache.TryGetValue(data.WorkoutId, out var workout) || workout.DeletedAt != null)
                     return;
 
-                var muscleGroup = workout.MuscleGroup.FirstOrDefault(mg => mg.Id == data.MuscleGroupId);
-                if (muscleGroup == null) return;
+                if (!workout.MuscleGroup.TryGetValue(data.MuscleGroupId, out var muscleGroup))
+                    return;
 
-                var exercise = muscleGroup.Exercises.FirstOrDefault(e => e.Id == data.ExerciseId);
-                if (exercise == null || exercise.Log.Any(l => l.Id == data.Id))
+                if (!muscleGroup.Exercises.TryGetValue(data.ExerciseId, out var exercise)
+                    || exercise.Log.ContainsKey(data.Id))
                 {
                     response.AcknowledgedChangeIds.Add(change.Id);
                     return;
@@ -48,7 +48,7 @@ public class LogChangeProcessor(
                     Date = data.Date
                 };
 
-                exercise.Log.Add(newLog);
+                exercise.Log[data.Id] = newLog;
                 workout.UpdatedAt = change.Timestamp;
                 dirtyWorkouts.Add(workout.Id);
                 break;
@@ -60,14 +60,13 @@ public class LogChangeProcessor(
                 if (!workoutCache.TryGetValue(data.WorkoutId, out var workout) || workout.DeletedAt != null)
                     return;
 
-                var muscleGroup = workout.MuscleGroup.FirstOrDefault(mg => mg.Id == data.MuscleGroupId);
-                if (muscleGroup == null) return;
+                if (!workout.MuscleGroup.TryGetValue(data.MuscleGroupId, out var muscleGroup))
+                    return;
 
-                var exercise = muscleGroup.Exercises.FirstOrDefault(e => e.Id == data.ExerciseId);
-                if (exercise == null) return;
+                if (!muscleGroup.Exercises.TryGetValue(data.ExerciseId, out var exercise))
+                    return;
 
-                var log = exercise.Log.FirstOrDefault(l => l.Id == data.Id);
-                if (log == null)
+                if (!exercise.Log.TryGetValue(data.Id, out var log))
                 {
                     response.AcknowledgedChangeIds.Add(change.Id);
                     return;
@@ -87,14 +86,14 @@ public class LogChangeProcessor(
                 if (!workoutCache.TryGetValue(data.WorkoutId, out var workout) || workout.DeletedAt != null)
                     return;
 
-                var muscleGroup = workout.MuscleGroup.FirstOrDefault(mg => mg.Id == data.MuscleGroupId);
-                if (muscleGroup == null) return;
+                if (!workout.MuscleGroup.TryGetValue(data.MuscleGroupId, out var muscleGroup))
+                    return;
 
-                var exercise = muscleGroup.Exercises.FirstOrDefault(e => e.Id == data.ExerciseId);
-                if (exercise == null) return;
+                if (!muscleGroup.Exercises.TryGetValue(data.ExerciseId, out var exercise))
+                    return;
 
-                var removed = exercise.Log.RemoveAll(l => l.Id == data.Id);
-                if (removed > 0)
+                var removed = exercise.Log.Remove(data.Id);
+                if (removed)
                 {
                     workout.UpdatedAt = change.Timestamp;
                     dirtyWorkouts.Add(workout.Id);

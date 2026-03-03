@@ -6,5 +6,5 @@ public class ExerciseEntity
     public required string MuscleGroupId { get; set; }
     public required string Title { get; set; }
     public int OrderIndex { get; set; }
-    public List<LogEntity> Log { get; set; } = [];
+    public Dictionary<string, LogEntity> Log { get; set; } = new();
 }

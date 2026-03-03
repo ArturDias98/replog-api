@@ -30,7 +30,7 @@ public class MuscleGroupChangeProcessor(
                 if (!workoutCache.TryGetValue(data.WorkoutId, out var workout) || workout.DeletedAt != null)
                     return;
 
-                if (workout.MuscleGroup.Any(mg => mg.Id == data.Id))
+                if (workout.MuscleGroup.ContainsKey(data.Id))
                 {
                     response.AcknowledgedChangeIds.Add(change.Id);
                     return;
@@ -45,7 +45,7 @@ public class MuscleGroupChangeProcessor(
                     OrderIndex = data.OrderIndex
                 };
 
-                workout.MuscleGroup.Add(newMuscleGroup);
+                workout.MuscleGroup[data.Id] = newMuscleGroup;
                 workout.UpdatedAt = change.Timestamp;
                 dirtyWorkouts.Add(workout.Id);
                 break;
@@ -57,8 +57,7 @@ public class MuscleGroupChangeProcessor(
                 if (!workoutCache.TryGetValue(data.WorkoutId, out var workout) || workout.DeletedAt != null)
                     return;
 
-                var muscleGroup = workout.MuscleGroup.FirstOrDefault(mg => mg.Id == data.Id);
-                if (muscleGroup == null)
+                if (!workout.MuscleGroup.TryGetValue(data.Id, out var muscleGroup))
                 {
                     response.AcknowledgedChangeIds.Add(change.Id);
                     return;
@@ -79,8 +78,8 @@ public class MuscleGroupChangeProcessor(
                 if (!workoutCache.TryGetValue(data.WorkoutId, out var workout) || workout.DeletedAt != null)
                     return;
 
-                var removed = workout.MuscleGroup.RemoveAll(mg => mg.Id == data.Id);
-                if (removed > 0)
+                var removed = workout.MuscleGroup.Remove(data.Id);
+                if (removed)
                 {
                     workout.UpdatedAt = change.Timestamp;
                     dirtyWorkouts.Add(workout.Id);

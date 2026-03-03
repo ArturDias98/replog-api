@@ -13,20 +13,20 @@ public static class WorkoutMapper
             Title = entity.Title,
             Date = entity.Date,
             OrderIndex = entity.OrderIndex,
-            MuscleGroup = entity.MuscleGroup.Select(mg => new MuscleGroupDto
+            MuscleGroup = entity.MuscleGroup.Values.OrderBy(mg => mg.OrderIndex).Select(mg => new MuscleGroupDto
             {
                 Id = mg.Id,
                 WorkoutId = mg.WorkoutId,
                 Title = mg.Title,
                 Date = mg.Date,
                 OrderIndex = mg.OrderIndex,
-                Exercises = mg.Exercises.Select(e => new ExerciseDto
+                Exercises = mg.Exercises.Values.OrderBy(e => e.OrderIndex).Select(e => new ExerciseDto
                 {
                     Id = e.Id,
                     MuscleGroupId = e.MuscleGroupId,
                     Title = e.Title,
                     OrderIndex = e.OrderIndex,
-                    Log = e.Log.Select(l => new LogDto
+                    Log = e.Log.Values.Select(l => new LogDto
                     {
                         Id = l.Id,
                         NumberReps = l.NumberReps,
