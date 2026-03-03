@@ -1,6 +1,7 @@
 using replog_infrastructure.Repositories;
 using replog_infrastructure.Repositories.SyncOperations;
 using replog_domain.Entities;
+using replog_tests_shared.Comparers;
 using replog_tests_shared.Fixtures;
 
 namespace replog_infrastructure.tests.Repositories;
@@ -35,7 +36,7 @@ public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
-        Assert.Equal(workout.Title, fetched.Title);
+        Assert.Equal(workout, fetched, WorkoutEntityComparer.Instance);
     }
 
     [Fact]
@@ -192,8 +193,7 @@ public class MuscleGroupSyncRepositoryTests(DynamoDbFixture fixture)
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
-        Assert.True(fetched.MuscleGroup.ContainsKey(mgId));
-        Assert.Equal("Chest", fetched.MuscleGroup[mgId].Title);
+        Assert.Equal(mg, fetched.MuscleGroup[mgId], MuscleGroupEntityComparer.Instance);
     }
 
     [Fact]
@@ -259,12 +259,12 @@ public class MuscleGroupSyncRepositoryTests(DynamoDbFixture fixture)
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
-        Assert.Equal("Updated Chest", fetched.MuscleGroup[mgId].Title);
-        Assert.Equal("2026-04-01", fetched.MuscleGroup[mgId].Date);
-        Assert.Equal(1, fetched.MuscleGroup[mgId].OrderIndex);
-        // Exercises must be preserved
-        Assert.True(fetched.MuscleGroup[mgId].Exercises.ContainsKey(exId));
-        Assert.Equal("Bench Press", fetched.MuscleGroup[mgId].Exercises[exId].Title);
+        var expectedMg = new MuscleGroupEntity
+        {
+            Id = mgId, WorkoutId = workout.Id, Title = "Updated Chest", Date = "2026-04-01", OrderIndex = 1,
+            Exercises = mg.Exercises
+        };
+        Assert.Equal(expectedMg, fetched.MuscleGroup[mgId], MuscleGroupEntityComparer.Instance);
     }
 
     // ── MuscleGroup Remove ──────────────────────────────────────────────
@@ -344,8 +344,7 @@ public class ExerciseSyncRepositoryTests(DynamoDbFixture fixture)
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
-        Assert.True(fetched.MuscleGroup[mgId].Exercises.ContainsKey(exId));
-        Assert.Equal("Bench Press", fetched.MuscleGroup[mgId].Exercises[exId].Title);
+        Assert.Equal(exercise, fetched.MuscleGroup[mgId].Exercises[exId], ExerciseEntityComparer.Instance);
     }
 
     // ── Exercise Update ─────────────────────────────────────────────────
@@ -375,11 +374,12 @@ public class ExerciseSyncRepositoryTests(DynamoDbFixture fixture)
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
-        Assert.Equal("Incline Press", fetched.MuscleGroup[mgId].Exercises[exId].Title);
-        Assert.Equal(1, fetched.MuscleGroup[mgId].Exercises[exId].OrderIndex);
-        // Logs must be preserved
-        Assert.True(fetched.MuscleGroup[mgId].Exercises[exId].Log.ContainsKey(logId));
-        Assert.Equal(10, fetched.MuscleGroup[mgId].Exercises[exId].Log[logId].NumberReps);
+        var expectedEx = new ExerciseEntity
+        {
+            Id = exId, MuscleGroupId = mgId, Title = "Incline Press", OrderIndex = 1,
+            Log = exercise.Log
+        };
+        Assert.Equal(expectedEx, fetched.MuscleGroup[mgId].Exercises[exId], ExerciseEntityComparer.Instance);
     }
 
     // ── Exercise Remove ─────────────────────────────────────────────────
@@ -460,9 +460,7 @@ public class LogSyncRepositoryTests(DynamoDbFixture fixture)
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
-        var fetchedLog = fetched.MuscleGroup[mgId].Exercises[exId].Log[logId];
-        Assert.Equal(10, fetchedLog.NumberReps);
-        Assert.Equal(80.5, fetchedLog.MaxWeight);
+        Assert.Equal(log, fetched.MuscleGroup[mgId].Exercises[exId].Log[logId], LogEntityComparer.Instance);
     }
 
     // ── Log Update ──────────────────────────────────────────────────────
@@ -484,9 +482,8 @@ public class LogSyncRepositoryTests(DynamoDbFixture fixture)
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
-        var fetchedLog = fetched.MuscleGroup[mgId].Exercises[exId].Log[logId];
-        Assert.Equal(12, fetchedLog.NumberReps);
-        Assert.Equal(90.5, fetchedLog.MaxWeight);
+        var expectedLog = new LogEntity { Id = logId, NumberReps = 12, MaxWeight = 90.5, Date = "2026-03-01" };
+        Assert.Equal(expectedLog, fetched.MuscleGroup[mgId].Exercises[exId].Log[logId], LogEntityComparer.Instance);
     }
 
     // ── Log Remove ──────────────────────────────────────────────────────

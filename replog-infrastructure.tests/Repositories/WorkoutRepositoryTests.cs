@@ -1,5 +1,6 @@
 using replog_infrastructure.Repositories;
 using replog_domain.Entities;
+using replog_tests_shared.Comparers;
 using replog_tests_shared.Fixtures;
 
 namespace replog_infrastructure.tests.Repositories;
@@ -71,21 +72,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
         var result = await _repository.GetByIdAsync(workout.Id);
 
         Assert.NotNull(result);
-        Assert.Equal(workout.Id, result.Id);
-        Assert.Equal(workout.UserId, result.UserId);
-        Assert.Equal(workout.Title, result.Title);
-        Assert.Equal(workout.Date, result.Date);
-        Assert.Equal(workout.OrderIndex, result.OrderIndex);
-
-        var mg = Assert.Single(result.MuscleGroup).Value;
-        Assert.Equal("Chest", mg.Title);
-
-        var exercise = Assert.Single(mg.Exercises).Value;
-        Assert.Equal("Bench Press", exercise.Title);
-
-        var log = Assert.Single(exercise.Log).Value;
-        Assert.Equal(10, log.NumberReps);
-        Assert.Equal(80.5, log.MaxWeight);
+        Assert.Equal(workout, result, WorkoutEntityComparer.Instance);
     }
 
     [Fact]
@@ -192,13 +179,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
         var result = await _repository.GetByIdAsync(workout.Id);
 
         Assert.NotNull(result);
-        Assert.Equal(2, result.MuscleGroup.Count);
-        Assert.True(result.MuscleGroup.ContainsKey(mg1Id));
-        Assert.True(result.MuscleGroup.ContainsKey(mg2Id));
-        Assert.Equal("Chest", result.MuscleGroup[mg1Id].Title);
-        Assert.Equal(0, result.MuscleGroup[mg1Id].OrderIndex);
-        Assert.Equal("Back", result.MuscleGroup[mg2Id].Title);
-        Assert.Equal(1, result.MuscleGroup[mg2Id].OrderIndex);
+        Assert.Equal(workout, result, WorkoutEntityComparer.Instance);
     }
 
     [Fact]
@@ -243,12 +224,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
         var result = await _repository.GetByIdAsync(workout.Id);
 
         Assert.NotNull(result);
-        var mg = Assert.Single(result.MuscleGroup).Value;
-        Assert.Equal(2, mg.Exercises.Count);
-        Assert.Equal("Bench Press", mg.Exercises[ex1Id].Title);
-        Assert.Equal(0, mg.Exercises[ex1Id].OrderIndex);
-        Assert.Equal("Incline Press", mg.Exercises[ex2Id].Title);
-        Assert.Equal(1, mg.Exercises[ex2Id].OrderIndex);
+        Assert.Equal(workout, result, WorkoutEntityComparer.Instance);
     }
 
     [Fact]
@@ -304,12 +280,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
         var result = await _repository.GetByIdAsync(workout.Id);
 
         Assert.NotNull(result);
-        var exercise = Assert.Single(Assert.Single(result.MuscleGroup).Value.Exercises).Value;
-        Assert.Equal(2, exercise.Log.Count);
-        Assert.Equal(10, exercise.Log[log1Id].NumberReps);
-        Assert.Equal(80.0, exercise.Log[log1Id].MaxWeight);
-        Assert.Equal(8, exercise.Log[log2Id].NumberReps);
-        Assert.Equal(90.0, exercise.Log[log2Id].MaxWeight);
+        Assert.Equal(workout, result, WorkoutEntityComparer.Instance);
     }
 
     [Fact]
@@ -399,20 +370,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
         var result = await _repository.GetByIdAsync(workout.Id);
 
         Assert.NotNull(result);
-        Assert.Equal(2, result.MuscleGroup.Count);
-
-        var chest = result.MuscleGroup[mg1Id];
-        Assert.Equal("Chest", chest.Title);
-        Assert.Equal(2, chest.Exercises.Count);
-        Assert.Equal(2, chest.Exercises[ex1Id].Log.Count);
-        Assert.Empty(chest.Exercises[ex2Id].Log);
-
-        var triceps = result.MuscleGroup[mg2Id];
-        Assert.Equal("Triceps", triceps.Title);
-        Assert.Equal(2, triceps.Exercises.Count);
-        Assert.Equal(12, triceps.Exercises[ex3Id].Log[log3Id].NumberReps);
-        Assert.Equal(15, triceps.Exercises[ex4Id].Log[log4Id].NumberReps);
-        Assert.Equal(30, triceps.Exercises[ex4Id].Log[log4Id].MaxWeight);
+        Assert.Equal(workout, result, WorkoutEntityComparer.Instance);
     }
 
     [Fact]
@@ -427,8 +385,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
         await _repository.PutAsync(emptyWorkout);
         var result1 = await _repository.GetByIdAsync(emptyWorkout.Id);
         Assert.NotNull(result1);
-        Assert.NotNull(result1.MuscleGroup);
-        Assert.Empty(result1.MuscleGroup);
+        Assert.Equal(emptyWorkout, result1, WorkoutEntityComparer.Instance);
 
         // MuscleGroup with empty Exercises
         var workoutEmptyExercises = CreateWorkout(userId);
@@ -446,8 +403,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
         await _repository.PutAsync(workoutEmptyExercises);
         var result2 = await _repository.GetByIdAsync(workoutEmptyExercises.Id);
         Assert.NotNull(result2);
-        Assert.NotNull(result2.MuscleGroup[mgId].Exercises);
-        Assert.Empty(result2.MuscleGroup[mgId].Exercises);
+        Assert.Equal(workoutEmptyExercises, result2, WorkoutEntityComparer.Instance);
 
         // Exercise with empty Log
         var workoutEmptyLogs = CreateWorkout(userId);
@@ -475,8 +431,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
         await _repository.PutAsync(workoutEmptyLogs);
         var result3 = await _repository.GetByIdAsync(workoutEmptyLogs.Id);
         Assert.NotNull(result3);
-        Assert.NotNull(result3.MuscleGroup[mgId].Exercises[exId].Log);
-        Assert.Empty(result3.MuscleGroup[mgId].Exercises[exId].Log);
+        Assert.Equal(workoutEmptyLogs, result3, WorkoutEntityComparer.Instance);
     }
 
     [Fact]
@@ -515,8 +470,6 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
         var result = await _repository.GetByIdAsync(workout.Id);
 
         Assert.NotNull(result);
-        Assert.Equal(2, result.MuscleGroup.Count);
-        Assert.Equal("Chest", result.MuscleGroup[mg1Id].Title);
-        Assert.Equal("Back", result.MuscleGroup[mg2Id].Title);
+        Assert.Equal(workout, result, WorkoutEntityComparer.Instance);
     }
 }
