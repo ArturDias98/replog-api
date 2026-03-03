@@ -6,4 +6,4 @@ public record UpdateLogSyncModel(
     string MuscleGroupId,
     string ExerciseId,
     int NumberReps,
-    int MaxWeight);
+    double MaxWeight);

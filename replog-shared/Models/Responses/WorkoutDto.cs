@@ -3,6 +3,7 @@ namespace replog_shared.Models.Responses;
 public class WorkoutDto
 {
     public required string Id { get; set; }
+    public required string UserId { get; set; }
     public required string Title { get; set; }
     public required string Date { get; set; }
     public int OrderIndex { get; set; }

@@ -10,6 +10,7 @@ public static class WorkoutMapper
         return new WorkoutDto
         {
             Id = entity.Id,
+            UserId = entity.UserId,
             Title = entity.Title,
             Date = entity.Date,
             OrderIndex = entity.OrderIndex,
