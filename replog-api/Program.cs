@@ -34,7 +34,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,
+                PermitLimit = int.Parse(builder.Configuration["RateLimiter:PermitLimit"] ?? "10"),
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
