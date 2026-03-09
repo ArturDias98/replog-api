@@ -46,7 +46,7 @@ public class LogChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
                 await logSync.UpdateLogAsync(
-                    data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id,
+                    userId, data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id,
                     data.NumberReps, data.MaxWeight, change.Timestamp);
                 break;
             }
@@ -55,7 +55,7 @@ public class LogChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
                 await logSync.RemoveLogAsync(
-                    data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id, change.Timestamp);
+                    userId, data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id, change.Timestamp);
                 break;
             }
             default:

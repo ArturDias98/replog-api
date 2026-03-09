@@ -39,7 +39,7 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient)
     }
 
     public async Task<bool> UpdateMuscleGroupAsync(
-        string workoutId, string mgId, string title, string date, int orderIndex, DateTime timestamp)
+        string userId, string workoutId, string mgId, string title, string date, int orderIndex, DateTime timestamp)
     {
         try
         {
@@ -48,7 +48,7 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient)
                 TableName = TableName,
                 Key = WorkoutKey(workoutId),
                 UpdateExpression = "SET muscleGroup.#mgId.title = :t, muscleGroup.#mgId.#d = :d, muscleGroup.#mgId.orderIndex = :o, updatedAt = :ts",
-                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt) AND attribute_exists(muscleGroup.#mgId)",
+                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt) AND userId = :uid AND attribute_exists(muscleGroup.#mgId)",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
                     ["#mgId"] = mgId,
@@ -59,7 +59,8 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient)
                     [":t"] = new() { S = title },
                     [":d"] = new() { S = date },
                     [":o"] = new() { N = orderIndex.ToString() },
-                    [":ts"] = DateTimeAttr(timestamp)
+                    [":ts"] = DateTimeAttr(timestamp),
+                    [":uid"] = new() { S = userId }
                 }
             });
             return true;
@@ -70,7 +71,7 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient)
         }
     }
 
-    public async Task<bool> RemoveMuscleGroupAsync(string workoutId, string mgId, DateTime timestamp)
+    public async Task<bool> RemoveMuscleGroupAsync(string userId, string workoutId, string mgId, DateTime timestamp)
     {
         try
         {
@@ -79,14 +80,15 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient)
                 TableName = TableName,
                 Key = WorkoutKey(workoutId),
                 UpdateExpression = "REMOVE muscleGroup.#mgId SET updatedAt = :ts",
-                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt) AND attribute_exists(muscleGroup.#mgId)",
+                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt) AND userId = :uid AND attribute_exists(muscleGroup.#mgId)",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
                     ["#mgId"] = mgId
                 },
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    [":ts"] = DateTimeAttr(timestamp)
+                    [":ts"] = DateTimeAttr(timestamp),
+                    [":uid"] = new() { S = userId }
                 }
             });
             return true;

@@ -43,7 +43,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient)
     }
 
     public async Task<bool> UpdateLogAsync(
-        string workoutId, string mgId, string exId, string logId,
+        string userId, string workoutId, string mgId, string exId, string logId,
         int numberReps, double maxWeight, DateTime timestamp)
     {
         try
@@ -53,7 +53,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient)
                 TableName = TableName,
                 Key = WorkoutKey(workoutId),
                 UpdateExpression = "SET muscleGroup.#mgId.exercises.#exId.#log.#logId.numberReps = :nr, muscleGroup.#mgId.exercises.#exId.#log.#logId.maxWeight = :mw, updatedAt = :ts",
-                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt) AND attribute_exists(muscleGroup.#mgId.exercises.#exId.#log.#logId)",
+                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt) AND userId = :uid AND attribute_exists(muscleGroup.#mgId.exercises.#exId.#log.#logId)",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
                     ["#mgId"] = mgId,
@@ -65,7 +65,8 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient)
                 {
                     [":nr"] = new() { N = numberReps.ToString() },
                     [":mw"] = new() { N = maxWeight.ToString(CultureInfo.InvariantCulture) },
-                    [":ts"] = DateTimeAttr(timestamp)
+                    [":ts"] = DateTimeAttr(timestamp),
+                    [":uid"] = new() { S = userId }
                 }
             });
             return true;
@@ -77,7 +78,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient)
     }
 
     public async Task<bool> RemoveLogAsync(
-        string workoutId, string mgId, string exId, string logId, DateTime timestamp)
+        string userId, string workoutId, string mgId, string exId, string logId, DateTime timestamp)
     {
         try
         {
@@ -86,7 +87,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient)
                 TableName = TableName,
                 Key = WorkoutKey(workoutId),
                 UpdateExpression = "REMOVE muscleGroup.#mgId.exercises.#exId.#log.#logId SET updatedAt = :ts",
-                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt) AND attribute_exists(muscleGroup.#mgId.exercises.#exId.#log.#logId)",
+                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt) AND userId = :uid AND attribute_exists(muscleGroup.#mgId.exercises.#exId.#log.#logId)",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
                     ["#mgId"] = mgId,
@@ -96,7 +97,8 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient)
                 },
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    [":ts"] = DateTimeAttr(timestamp)
+                    [":ts"] = DateTimeAttr(timestamp),
+                    [":uid"] = new() { S = userId }
                 }
             });
             return true;

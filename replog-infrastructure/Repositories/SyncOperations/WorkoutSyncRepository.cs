@@ -33,7 +33,7 @@ public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient)
     }
 
     public async Task<WorkoutEntity?> UpdateWorkoutAsync(
-        string workoutId, string title, string date, int orderIndex, DateTime timestamp)
+        string userId, string workoutId, string title, string date, int orderIndex, DateTime timestamp)
     {
         var current = await GetByIdAsync(workoutId);
         if (current is null || current.DeletedAt is not null)
@@ -49,7 +49,7 @@ public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient)
                 TableName = TableName,
                 Key = WorkoutKey(workoutId),
                 UpdateExpression = "SET title = :t, #d = :d, orderIndex = :o, updatedAt = :ts",
-                ConditionExpression = "updatedAt = :currentTs",
+                ConditionExpression = "updatedAt = :currentTs AND userId = :uid",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
                     ["#d"] = "date"
@@ -60,7 +60,8 @@ public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient)
                     [":d"] = new() { S = date },
                     [":o"] = new() { N = orderIndex.ToString() },
                     [":ts"] = DateTimeAttr(timestamp),
-                    [":currentTs"] = DateTimeAttr(current.UpdatedAt)
+                    [":currentTs"] = DateTimeAttr(current.UpdatedAt),
+                    [":uid"] = new() { S = userId }
                 }
             });
             return null;
@@ -71,7 +72,7 @@ public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient)
         }
     }
 
-    public async Task<bool> SoftDeleteWorkoutAsync(string workoutId, DateTime timestamp)
+    public async Task<bool> SoftDeleteWorkoutAsync(string userId, string workoutId, DateTime timestamp)
     {
         try
         {
@@ -80,10 +81,11 @@ public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient)
                 TableName = TableName,
                 Key = WorkoutKey(workoutId),
                 UpdateExpression = "SET deletedAt = :ts, updatedAt = :ts",
-                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt)",
+                ConditionExpression = "attribute_exists(id) AND attribute_not_exists(deletedAt) AND userId = :uid",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    [":ts"] = DateTimeAttr(timestamp)
+                    [":ts"] = DateTimeAttr(timestamp),
+                    [":uid"] = new() { S = userId }
                 }
             });
             return true;

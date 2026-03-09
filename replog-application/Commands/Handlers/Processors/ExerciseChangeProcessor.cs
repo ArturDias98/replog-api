@@ -45,7 +45,7 @@ public class ExerciseChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
                 await exerciseSync.UpdateExerciseAsync(
-                    data.WorkoutId, data.MuscleGroupId, data.Id, data.Title, data.OrderIndex, change.Timestamp);
+                    userId, data.WorkoutId, data.MuscleGroupId, data.Id, data.Title, data.OrderIndex, change.Timestamp);
                 break;
             }
 
@@ -53,7 +53,7 @@ public class ExerciseChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
                 await exerciseSync.RemoveExerciseAsync(
-                    data.WorkoutId, data.MuscleGroupId, data.Id, change.Timestamp);
+                    userId, data.WorkoutId, data.MuscleGroupId, data.Id, change.Timestamp);
                 break;
             }
         }

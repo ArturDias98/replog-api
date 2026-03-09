@@ -49,7 +49,7 @@ public class WorkoutChangeProcessor(
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
 
                 var conflictWorkout = await workoutSync.UpdateWorkoutAsync(
-                    data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp);
+                    userId, data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp);
 
                 if (conflictWorkout is not null)
                 {
@@ -67,7 +67,7 @@ public class WorkoutChangeProcessor(
             case ChangeAction.Delete:
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
-                await workoutSync.SoftDeleteWorkoutAsync(data.Id, change.Timestamp);
+                await workoutSync.SoftDeleteWorkoutAsync(userId, data.Id, change.Timestamp);
                 break;
             }
             default:

@@ -61,7 +61,7 @@ public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
 
         var newTimestamp = DateTime.UtcNow.AddMinutes(1);
         var conflict = await _workoutSync.UpdateWorkoutAsync(
-            workout.Id, "Updated Title", "2026-04-01", 5, newTimestamp);
+            userId, workout.Id, "Updated Title", "2026-04-01", 5, newTimestamp);
 
         Assert.Null(conflict);
 
@@ -82,12 +82,12 @@ public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
 
         // Update with server time
         var serverTime = DateTime.UtcNow.AddMinutes(5);
-        await _workoutSync.UpdateWorkoutAsync(workout.Id, "Server Title", "2026-04-01", 1, serverTime);
+        await _workoutSync.UpdateWorkoutAsync(userId, workout.Id, "Server Title", "2026-04-01", 1, serverTime);
 
         // Try client update with older timestamp
         var clientTime = workout.UpdatedAt.AddMinutes(1);
         var conflict = await _workoutSync.UpdateWorkoutAsync(
-            workout.Id, "Client Title", "2026-05-01", 2, clientTime);
+            userId, workout.Id, "Client Title", "2026-05-01", 2, clientTime);
 
         Assert.NotNull(conflict);
         Assert.Equal("Server Title", conflict.Title);
@@ -97,7 +97,7 @@ public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
     public async Task UpdateWorkout_ShouldReturnNull_WhenWorkoutDoesNotExist()
     {
         var result = await _workoutSync.UpdateWorkoutAsync(
-            Guid.NewGuid().ToString(), "Title", "2026-03-01", 0, DateTime.UtcNow);
+            Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), "Title", "2026-03-01", 0, DateTime.UtcNow);
 
         Assert.Null(result);
     }
@@ -108,10 +108,10 @@ public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
         var userId = Guid.NewGuid().ToString();
         var workout = CreateWorkout(userId);
         await _workoutSync.CreateWorkoutAsync(workout);
-        await _workoutSync.SoftDeleteWorkoutAsync(workout.Id, DateTime.UtcNow);
+        await _workoutSync.SoftDeleteWorkoutAsync(userId, workout.Id, DateTime.UtcNow);
 
         var result = await _workoutSync.UpdateWorkoutAsync(
-            workout.Id, "Title", "2026-03-01", 0, DateTime.UtcNow.AddMinutes(1));
+            userId, workout.Id, "Title", "2026-03-01", 0, DateTime.UtcNow.AddMinutes(1));
 
         Assert.Null(result);
     }
@@ -125,7 +125,7 @@ public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
         var workout = CreateWorkout(userId);
         await _workoutSync.CreateWorkoutAsync(workout);
 
-        var result = await _workoutSync.SoftDeleteWorkoutAsync(workout.Id, DateTime.UtcNow);
+        var result = await _workoutSync.SoftDeleteWorkoutAsync(userId, workout.Id, DateTime.UtcNow);
 
         Assert.True(result);
 
@@ -136,11 +136,12 @@ public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
     [Fact]
     public async Task SoftDelete_ShouldReturnFalse_WhenAlreadyDeleted()
     {
-        var workout = CreateWorkout(Guid.NewGuid().ToString());
+        var userId = Guid.NewGuid().ToString();
+        var workout = CreateWorkout(userId);
         await _workoutSync.CreateWorkoutAsync(workout);
-        await _workoutSync.SoftDeleteWorkoutAsync(workout.Id, DateTime.UtcNow);
+        await _workoutSync.SoftDeleteWorkoutAsync(userId, workout.Id, DateTime.UtcNow);
 
-        var result = await _workoutSync.SoftDeleteWorkoutAsync(workout.Id, DateTime.UtcNow);
+        var result = await _workoutSync.SoftDeleteWorkoutAsync(userId, workout.Id, DateTime.UtcNow);
 
         Assert.False(result);
     }
@@ -148,9 +149,43 @@ public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
     [Fact]
     public async Task SoftDelete_ShouldReturnFalse_WhenWorkoutDoesNotExist()
     {
-        var result = await _workoutSync.SoftDeleteWorkoutAsync(Guid.NewGuid().ToString(), DateTime.UtcNow);
+        var result = await _workoutSync.SoftDeleteWorkoutAsync(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), DateTime.UtcNow);
 
         Assert.False(result);
+    }
+
+    // ── Ownership Validation ──────────────────────────────────────────
+
+    [Fact]
+    public async Task UpdateWorkout_ShouldReturnConflict_WhenWrongUser()
+    {
+        var ownerId = Guid.NewGuid().ToString();
+        var workout = CreateWorkout(ownerId);
+        await _workoutSync.CreateWorkoutAsync(workout);
+
+        var attackerId = Guid.NewGuid().ToString();
+        var conflict = await _workoutSync.UpdateWorkoutAsync(
+            attackerId, workout.Id, "Hacked Title", "2026-06-01", 99, DateTime.UtcNow.AddMinutes(1));
+
+        Assert.NotNull(conflict);
+        Assert.Equal("Push Day", conflict.Title);
+    }
+
+    [Fact]
+    public async Task SoftDelete_ShouldReturnFalse_WhenWrongUser()
+    {
+        var ownerId = Guid.NewGuid().ToString();
+        var workout = CreateWorkout(ownerId);
+        await _workoutSync.CreateWorkoutAsync(workout);
+
+        var attackerId = Guid.NewGuid().ToString();
+        var result = await _workoutSync.SoftDeleteWorkoutAsync(attackerId, workout.Id, DateTime.UtcNow);
+
+        Assert.False(result);
+
+        var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
+        Assert.NotNull(fetched);
+        Assert.Null(fetched.DeletedAt);
     }
 }
 
@@ -202,7 +237,7 @@ public class MuscleGroupSyncRepositoryTests(DynamoDbFixture fixture)
         var userId = Guid.NewGuid().ToString();
         var workout = CreateWorkout(userId);
         await _workoutSync.CreateWorkoutAsync(workout);
-        await _workoutSync.SoftDeleteWorkoutAsync(workout.Id, DateTime.UtcNow);
+        await _workoutSync.SoftDeleteWorkoutAsync(userId, workout.Id, DateTime.UtcNow);
 
         var mg = new MuscleGroupEntity
         {
@@ -234,6 +269,31 @@ public class MuscleGroupSyncRepositoryTests(DynamoDbFixture fixture)
     // ── MuscleGroup Update ──────────────────────────────────────────────
 
     [Fact]
+    public async Task UpdateMuscleGroup_ShouldReturnFalse_WhenWrongUser()
+    {
+        var ownerId = Guid.NewGuid().ToString();
+        var workout = CreateWorkout(ownerId);
+        await _workoutSync.CreateWorkoutAsync(workout);
+
+        var mgId = Guid.NewGuid().ToString();
+        var mg = new MuscleGroupEntity
+        {
+            Id = mgId, WorkoutId = workout.Id, Title = "Chest", Date = "2026-03-01", OrderIndex = 0
+        };
+        await _mgSync.AddMuscleGroupAsync(ownerId, mg, DateTime.UtcNow);
+
+        var attackerId = Guid.NewGuid().ToString();
+        var result = await _mgSync.UpdateMuscleGroupAsync(
+            attackerId, workout.Id, mgId, "Hacked", "2026-06-01", 99, DateTime.UtcNow.AddMinutes(1));
+
+        Assert.False(result);
+
+        var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
+        Assert.NotNull(fetched);
+        Assert.Equal("Chest", fetched.MuscleGroup[mgId].Title);
+    }
+
+    [Fact]
     public async Task UpdateMuscleGroup_ShouldUpdateFields_WithoutLosingExercises()
     {
         var userId = Guid.NewGuid().ToString();
@@ -253,7 +313,7 @@ public class MuscleGroupSyncRepositoryTests(DynamoDbFixture fixture)
         await _mgSync.AddMuscleGroupAsync(userId, mg, DateTime.UtcNow);
 
         var result = await _mgSync.UpdateMuscleGroupAsync(
-            workout.Id, mgId, "Updated Chest", "2026-04-01", 1, DateTime.UtcNow.AddMinutes(1));
+            userId, workout.Id, mgId, "Updated Chest", "2026-04-01", 1, DateTime.UtcNow.AddMinutes(1));
 
         Assert.True(result);
 
@@ -283,13 +343,37 @@ public class MuscleGroupSyncRepositoryTests(DynamoDbFixture fixture)
         };
         await _mgSync.AddMuscleGroupAsync(userId, mg, DateTime.UtcNow);
 
-        var result = await _mgSync.RemoveMuscleGroupAsync(workout.Id, mgId, DateTime.UtcNow.AddMinutes(1));
+        var result = await _mgSync.RemoveMuscleGroupAsync(userId, workout.Id, mgId, DateTime.UtcNow.AddMinutes(1));
 
         Assert.True(result);
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
         Assert.False(fetched.MuscleGroup.ContainsKey(mgId));
+    }
+
+    [Fact]
+    public async Task RemoveMuscleGroup_ShouldReturnFalse_WhenWrongUser()
+    {
+        var ownerId = Guid.NewGuid().ToString();
+        var workout = CreateWorkout(ownerId);
+        await _workoutSync.CreateWorkoutAsync(workout);
+
+        var mgId = Guid.NewGuid().ToString();
+        var mg = new MuscleGroupEntity
+        {
+            Id = mgId, WorkoutId = workout.Id, Title = "Chest", Date = "2026-03-01", OrderIndex = 0
+        };
+        await _mgSync.AddMuscleGroupAsync(ownerId, mg, DateTime.UtcNow);
+
+        var attackerId = Guid.NewGuid().ToString();
+        var result = await _mgSync.RemoveMuscleGroupAsync(attackerId, workout.Id, mgId, DateTime.UtcNow.AddMinutes(1));
+
+        Assert.False(result);
+
+        var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
+        Assert.NotNull(fetched);
+        Assert.True(fetched.MuscleGroup.ContainsKey(mgId));
     }
 }
 
@@ -350,6 +434,27 @@ public class ExerciseSyncRepositoryTests(DynamoDbFixture fixture)
     // ── Exercise Update ─────────────────────────────────────────────────
 
     [Fact]
+    public async Task UpdateExercise_ShouldReturnFalse_WhenWrongUser()
+    {
+        var ownerId = Guid.NewGuid().ToString();
+        var (workout, mgId) = await SetupWithMuscleGroup(ownerId);
+
+        var exId = Guid.NewGuid().ToString();
+        var exercise = new ExerciseEntity { Id = exId, MuscleGroupId = mgId, Title = "Bench Press", OrderIndex = 0 };
+        await _exSync.AddExerciseAsync(workout.Id, ownerId, exercise, DateTime.UtcNow);
+
+        var attackerId = Guid.NewGuid().ToString();
+        var result = await _exSync.UpdateExerciseAsync(
+            attackerId, workout.Id, mgId, exId, "Hacked", 99, DateTime.UtcNow.AddMinutes(1));
+
+        Assert.False(result);
+
+        var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
+        Assert.NotNull(fetched);
+        Assert.Equal("Bench Press", fetched.MuscleGroup[mgId].Exercises[exId].Title);
+    }
+
+    [Fact]
     public async Task UpdateExercise_ShouldUpdateFields_WithoutLosingLogs()
     {
         var userId = Guid.NewGuid().ToString();
@@ -368,7 +473,7 @@ public class ExerciseSyncRepositoryTests(DynamoDbFixture fixture)
         await _exSync.AddExerciseAsync(workout.Id, userId, exercise, DateTime.UtcNow);
 
         var result = await _exSync.UpdateExerciseAsync(
-            workout.Id, mgId, exId, "Incline Press", 1, DateTime.UtcNow.AddMinutes(1));
+            userId, workout.Id, mgId, exId, "Incline Press", 1, DateTime.UtcNow.AddMinutes(1));
 
         Assert.True(result);
 
@@ -394,13 +499,33 @@ public class ExerciseSyncRepositoryTests(DynamoDbFixture fixture)
         var exercise = new ExerciseEntity { Id = exId, MuscleGroupId = mgId, Title = "Bench Press", OrderIndex = 0 };
         await _exSync.AddExerciseAsync(workout.Id, userId, exercise, DateTime.UtcNow);
 
-        var result = await _exSync.RemoveExerciseAsync(workout.Id, mgId, exId, DateTime.UtcNow.AddMinutes(1));
+        var result = await _exSync.RemoveExerciseAsync(userId, workout.Id, mgId, exId, DateTime.UtcNow.AddMinutes(1));
 
         Assert.True(result);
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
         Assert.False(fetched.MuscleGroup[mgId].Exercises.ContainsKey(exId));
+    }
+
+    [Fact]
+    public async Task RemoveExercise_ShouldReturnFalse_WhenWrongUser()
+    {
+        var ownerId = Guid.NewGuid().ToString();
+        var (workout, mgId) = await SetupWithMuscleGroup(ownerId);
+
+        var exId = Guid.NewGuid().ToString();
+        var exercise = new ExerciseEntity { Id = exId, MuscleGroupId = mgId, Title = "Bench Press", OrderIndex = 0 };
+        await _exSync.AddExerciseAsync(workout.Id, ownerId, exercise, DateTime.UtcNow);
+
+        var attackerId = Guid.NewGuid().ToString();
+        var result = await _exSync.RemoveExerciseAsync(attackerId, workout.Id, mgId, exId, DateTime.UtcNow.AddMinutes(1));
+
+        Assert.False(result);
+
+        var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
+        Assert.NotNull(fetched);
+        Assert.True(fetched.MuscleGroup[mgId].Exercises.ContainsKey(exId));
     }
 }
 
@@ -466,6 +591,28 @@ public class LogSyncRepositoryTests(DynamoDbFixture fixture)
     // ── Log Update ──────────────────────────────────────────────────────
 
     [Fact]
+    public async Task UpdateLog_ShouldReturnFalse_WhenWrongUser()
+    {
+        var ownerId = Guid.NewGuid().ToString();
+        var (workout, mgId, exId) = await SetupWithExercise(ownerId);
+
+        var logId = Guid.NewGuid().ToString();
+        var log = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01", OrderIndex = 0 };
+        await _logSync.AddLogAsync(workout.Id, ownerId, mgId, exId, log, DateTime.UtcNow);
+
+        var attackerId = Guid.NewGuid().ToString();
+        var result = await _logSync.UpdateLogAsync(
+            attackerId, workout.Id, mgId, exId, logId, 99, 999, DateTime.UtcNow.AddMinutes(1));
+
+        Assert.False(result);
+
+        var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
+        Assert.NotNull(fetched);
+        Assert.Equal(10, fetched.MuscleGroup[mgId].Exercises[exId].Log[logId].NumberReps);
+        Assert.Equal(80, fetched.MuscleGroup[mgId].Exercises[exId].Log[logId].MaxWeight);
+    }
+
+    [Fact]
     public async Task UpdateLog_ShouldUpdateFields()
     {
         var userId = Guid.NewGuid().ToString();
@@ -476,7 +623,7 @@ public class LogSyncRepositoryTests(DynamoDbFixture fixture)
         await _logSync.AddLogAsync(workout.Id, userId, mgId, exId, log, DateTime.UtcNow);
 
         var result = await _logSync.UpdateLogAsync(
-            workout.Id, mgId, exId, logId, 12, 90.5, DateTime.UtcNow.AddMinutes(1));
+            userId, workout.Id, mgId, exId, logId, 12, 90.5, DateTime.UtcNow.AddMinutes(1));
 
         Assert.True(result);
 
@@ -499,12 +646,33 @@ public class LogSyncRepositoryTests(DynamoDbFixture fixture)
         await _logSync.AddLogAsync(workout.Id, userId, mgId, exId, log, DateTime.UtcNow);
 
         var result = await _logSync.RemoveLogAsync(
-            workout.Id, mgId, exId, logId, DateTime.UtcNow.AddMinutes(1));
+            userId, workout.Id, mgId, exId, logId, DateTime.UtcNow.AddMinutes(1));
 
         Assert.True(result);
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
         Assert.False(fetched.MuscleGroup[mgId].Exercises[exId].Log.ContainsKey(logId));
+    }
+
+    [Fact]
+    public async Task RemoveLog_ShouldReturnFalse_WhenWrongUser()
+    {
+        var ownerId = Guid.NewGuid().ToString();
+        var (workout, mgId, exId) = await SetupWithExercise(ownerId);
+
+        var logId = Guid.NewGuid().ToString();
+        var log = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01", OrderIndex = 0 };
+        await _logSync.AddLogAsync(workout.Id, ownerId, mgId, exId, log, DateTime.UtcNow);
+
+        var attackerId = Guid.NewGuid().ToString();
+        var result = await _logSync.RemoveLogAsync(
+            attackerId, workout.Id, mgId, exId, logId, DateTime.UtcNow.AddMinutes(1));
+
+        Assert.False(result);
+
+        var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
+        Assert.NotNull(fetched);
+        Assert.True(fetched.MuscleGroup[mgId].Exercises[exId].Log.ContainsKey(logId));
     }
 }

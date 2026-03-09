@@ -46,7 +46,7 @@ public class MuscleGroupChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
                 await muscleGroupSync.UpdateMuscleGroupAsync(
-                    data.WorkoutId, data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp);
+                    userId, data.WorkoutId, data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp);
                 break;
             }
 
@@ -54,7 +54,7 @@ public class MuscleGroupChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
                 await muscleGroupSync.RemoveMuscleGroupAsync(
-                    data.WorkoutId, data.Id, change.Timestamp);
+                    userId, data.WorkoutId, data.Id, change.Timestamp);
                 break;
             }
             default:
