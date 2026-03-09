@@ -27,7 +27,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
-// Rate limiting — 10 sync requests per minute per user
 builder.Services.AddRateLimiter(options =>
 {
     options.AddPolicy("sync", context =>

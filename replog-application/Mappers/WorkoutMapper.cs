@@ -27,12 +27,13 @@ public static class WorkoutMapper
                     MuscleGroupId = e.MuscleGroupId,
                     Title = e.Title,
                     OrderIndex = e.OrderIndex,
-                    Log = e.Log.Values.Select(l => new LogDto
+                    Log = e.Log.Values.OrderBy(l => l.OrderIndex).Select(l => new LogDto
                     {
                         Id = l.Id,
                         NumberReps = l.NumberReps,
                         MaxWeight = l.MaxWeight,
-                        Date = l.Date
+                        Date = l.Date,
+                        OrderIndex = l.OrderIndex
                     }).ToList()
                 }).ToList()
             }).ToList()

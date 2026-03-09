@@ -7,4 +7,5 @@ public record LogSyncModel(
     string ExerciseId,
     int NumberReps,
     double MaxWeight,
-    string Date);
+    string Date,
+    int OrderIndex);

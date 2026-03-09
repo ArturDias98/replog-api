@@ -14,9 +14,10 @@ public class LogEntityComparer : IEqualityComparer<LogEntity>
         return x.Id == y.Id
             && x.NumberReps == y.NumberReps
             && x.MaxWeight == y.MaxWeight
-            && x.Date == y.Date;
+            && x.Date == y.Date
+            && x.OrderIndex == y.OrderIndex;
     }
 
     public int GetHashCode(LogEntity obj) =>
-        HashCode.Combine(obj.Id, obj.NumberReps, obj.MaxWeight, obj.Date);
+        HashCode.Combine(obj.Id, obj.NumberReps, obj.MaxWeight, obj.Date, obj.OrderIndex);
 }

@@ -362,7 +362,7 @@ public class ExerciseSyncRepositoryTests(DynamoDbFixture fixture)
             Id = exId, MuscleGroupId = mgId, Title = "Bench Press", OrderIndex = 0,
             Log = new Dictionary<string, LogEntity>
             {
-                [logId] = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01" }
+                [logId] = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01", OrderIndex = 0 }
             }
         };
         await _exSync.AddExerciseAsync(workout.Id, userId, exercise, DateTime.UtcNow);
@@ -452,7 +452,7 @@ public class LogSyncRepositoryTests(DynamoDbFixture fixture)
         var (workout, mgId, exId) = await SetupWithExercise(userId);
 
         var logId = Guid.NewGuid().ToString();
-        var log = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80.5, Date = "2026-03-01" };
+        var log = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80.5, Date = "2026-03-01", OrderIndex = 0 };
 
         var result = await _logSync.AddLogAsync(workout.Id, userId, mgId, exId, log, DateTime.UtcNow.AddMinutes(1));
 
@@ -472,7 +472,7 @@ public class LogSyncRepositoryTests(DynamoDbFixture fixture)
         var (workout, mgId, exId) = await SetupWithExercise(userId);
 
         var logId = Guid.NewGuid().ToString();
-        var log = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01" };
+        var log = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01", OrderIndex = 0 };
         await _logSync.AddLogAsync(workout.Id, userId, mgId, exId, log, DateTime.UtcNow);
 
         var result = await _logSync.UpdateLogAsync(
@@ -482,7 +482,7 @@ public class LogSyncRepositoryTests(DynamoDbFixture fixture)
 
         var fetched = await _workoutRepo.GetByIdAsync(workout.Id);
         Assert.NotNull(fetched);
-        var expectedLog = new LogEntity { Id = logId, NumberReps = 12, MaxWeight = 90.5, Date = "2026-03-01" };
+        var expectedLog = new LogEntity { Id = logId, NumberReps = 12, MaxWeight = 90.5, Date = "2026-03-01", OrderIndex = 0 };
         Assert.Equal(expectedLog, fetched.MuscleGroup[mgId].Exercises[exId].Log[logId], LogEntityComparer.Instance);
     }
 
@@ -495,7 +495,7 @@ public class LogSyncRepositoryTests(DynamoDbFixture fixture)
         var (workout, mgId, exId) = await SetupWithExercise(userId);
 
         var logId = Guid.NewGuid().ToString();
-        var log = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01" };
+        var log = new LogEntity { Id = logId, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01", OrderIndex = 0 };
         await _logSync.AddLogAsync(workout.Id, userId, mgId, exId, log, DateTime.UtcNow);
 
         var result = await _logSync.RemoveLogAsync(

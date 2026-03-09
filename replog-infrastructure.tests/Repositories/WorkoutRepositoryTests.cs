@@ -52,7 +52,8 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
                                 Id = logId,
                                 NumberReps = 10,
                                 MaxWeight = 80.5,
-                                Date = "2026-03-01"
+                                Date = "2026-03-01",
+                                OrderIndex = 0
                             }
                         }
                     }
@@ -261,14 +262,16 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
                                 Id = log1Id,
                                 NumberReps = 10,
                                 MaxWeight = 80.0,
-                                Date = "2026-03-01"
+                                Date = "2026-03-01",
+                                OrderIndex = 0
                             },
                             [log2Id] = new LogEntity
                             {
                                 Id = log2Id,
                                 NumberReps = 8,
                                 MaxWeight = 90.0,
-                                Date = "2026-03-02"
+                                Date = "2026-03-02",
+                                OrderIndex = 1
                             }
                         }
                     }
@@ -318,8 +321,8 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
                         OrderIndex = 0,
                         Log = new Dictionary<string, LogEntity>
                         {
-                            [log1Id] = new LogEntity { Id = log1Id, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01" },
-                            [log2Id] = new LogEntity { Id = log2Id, NumberReps = 8, MaxWeight = 85, Date = "2026-03-01" }
+                            [log1Id] = new LogEntity { Id = log1Id, NumberReps = 10, MaxWeight = 80, Date = "2026-03-01", OrderIndex = 0 },
+                            [log2Id] = new LogEntity { Id = log2Id, NumberReps = 8, MaxWeight = 85, Date = "2026-03-01", OrderIndex = 1 }
                         }
                     },
                     [ex2Id] = new ExerciseEntity
@@ -348,7 +351,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
                         OrderIndex = 0,
                         Log = new Dictionary<string, LogEntity>
                         {
-                            [log3Id] = new LogEntity { Id = log3Id, NumberReps = 12, MaxWeight = 0, Date = "2026-03-01" }
+                            [log3Id] = new LogEntity { Id = log3Id, NumberReps = 12, MaxWeight = 0, Date = "2026-03-01", OrderIndex = 0 }
                         }
                     },
                     [ex4Id] = new ExerciseEntity
@@ -359,7 +362,7 @@ public class WorkoutRepositoryTests(DynamoDbFixture fixture)
                         OrderIndex = 1,
                         Log = new Dictionary<string, LogEntity>
                         {
-                            [log4Id] = new LogEntity { Id = log4Id, NumberReps = 15, MaxWeight = 30, Date = "2026-03-01" }
+                            [log4Id] = new LogEntity { Id = log4Id, NumberReps = 15, MaxWeight = 30, Date = "2026-03-01", OrderIndex = 0 }
                         }
                     }
                 }

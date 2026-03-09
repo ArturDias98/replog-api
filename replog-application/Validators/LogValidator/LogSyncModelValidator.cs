@@ -24,5 +24,8 @@ public class LogSyncModelValidator : AbstractValidator<LogSyncModel>
 
         RuleFor(x => x.MaxWeight)
             .GreaterThanOrEqualTo(0).WithMessage("Max weight must be non-negative.");
+
+        RuleFor(x => x.OrderIndex)
+            .GreaterThanOrEqualTo(0).WithMessage("Order index must be non-negative.");
     }
 }

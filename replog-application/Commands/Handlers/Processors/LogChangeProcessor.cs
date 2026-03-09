@@ -33,7 +33,8 @@ public class LogChangeProcessor(
                     Id = data.Id,
                     NumberReps = data.NumberReps,
                     MaxWeight = data.MaxWeight,
-                    Date = data.Date
+                    Date = data.Date,
+                    OrderIndex = data.OrderIndex
                 };
 
                 await logSync.AddLogAsync(
