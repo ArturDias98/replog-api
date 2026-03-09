@@ -1,22 +1,24 @@
 using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Options;
 using replog_application.Interfaces;
-using replog_shared.Json;
 using replog_domain.Entities;
+using replog_infrastructure.Settings;
+using replog_shared.Json;
 
 namespace replog_infrastructure.Repositories;
 
-public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient) : IWorkoutRepository
+public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSettings> settings) : IWorkoutRepository
 {
-    private const string TableName = "replog-workouts";
+    private readonly string _tableName = settings.Value.TableName;
     private const string UserIdIndexName = "UserIdIndex";
 
     public async Task<WorkoutEntity?> GetByIdAsync(string workoutId)
     {
         var response = await dynamoDbClient.GetItemAsync(new GetItemRequest
         {
-            TableName = TableName,
+            TableName = _tableName,
             Key = new Dictionary<string, AttributeValue>
             {
                 ["id"] = new() { S = workoutId }
@@ -35,7 +37,7 @@ public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient) : IWorkoutReposit
         {
             var response = await dynamoDbClient.QueryAsync(new QueryRequest
             {
-                TableName = TableName,
+                TableName = _tableName,
                 IndexName = UserIdIndexName,
                 KeyConditionExpression = "userId = :uid",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
@@ -66,7 +68,7 @@ public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient) : IWorkoutReposit
 
         await dynamoDbClient.PutItemAsync(new PutItemRequest
         {
-            TableName = TableName,
+            TableName = _tableName,
             Item = item
         });
     }

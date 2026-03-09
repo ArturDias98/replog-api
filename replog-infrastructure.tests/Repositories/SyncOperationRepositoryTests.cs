@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Options;
 using replog_infrastructure.Repositories;
 using replog_infrastructure.Repositories.SyncOperations;
+using replog_infrastructure.Settings;
 using replog_domain.Entities;
 using replog_tests_shared.Comparers;
 using replog_tests_shared.Fixtures;
@@ -9,8 +11,9 @@ namespace replog_infrastructure.tests.Repositories;
 [Collection("DynamoDB")]
 public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
 {
-    private readonly WorkoutSyncRepository _workoutSync = new(fixture.Client);
-    private readonly WorkoutRepository _workoutRepo = new(fixture.Client);
+    private static readonly IOptions<DynamoDbSettings> Settings = Options.Create(new DynamoDbSettings());
+    private readonly WorkoutSyncRepository _workoutSync = new(fixture.Client, Settings);
+    private readonly WorkoutRepository _workoutRepo = new(fixture.Client, Settings);
 
     private static WorkoutEntity CreateWorkout(string userId, string? id = null) => new()
     {
@@ -192,9 +195,10 @@ public class WorkoutSyncRepositoryTests(DynamoDbFixture fixture)
 [Collection("DynamoDB")]
 public class MuscleGroupSyncRepositoryTests(DynamoDbFixture fixture)
 {
-    private readonly WorkoutSyncRepository _workoutSync = new(fixture.Client);
-    private readonly MuscleGroupSyncRepository _mgSync = new(fixture.Client);
-    private readonly WorkoutRepository _workoutRepo = new(fixture.Client);
+    private static readonly IOptions<DynamoDbSettings> Settings = Options.Create(new DynamoDbSettings());
+    private readonly WorkoutSyncRepository _workoutSync = new(fixture.Client, Settings);
+    private readonly MuscleGroupSyncRepository _mgSync = new(fixture.Client, Settings);
+    private readonly WorkoutRepository _workoutRepo = new(fixture.Client, Settings);
 
     private static WorkoutEntity CreateWorkout(string userId) => new()
     {
@@ -380,10 +384,11 @@ public class MuscleGroupSyncRepositoryTests(DynamoDbFixture fixture)
 [Collection("DynamoDB")]
 public class ExerciseSyncRepositoryTests(DynamoDbFixture fixture)
 {
-    private readonly WorkoutSyncRepository _workoutSync = new(fixture.Client);
-    private readonly MuscleGroupSyncRepository _mgSync = new(fixture.Client);
-    private readonly ExerciseSyncRepository _exSync = new(fixture.Client);
-    private readonly WorkoutRepository _workoutRepo = new(fixture.Client);
+    private static readonly IOptions<DynamoDbSettings> Settings = Options.Create(new DynamoDbSettings());
+    private readonly WorkoutSyncRepository _workoutSync = new(fixture.Client, Settings);
+    private readonly MuscleGroupSyncRepository _mgSync = new(fixture.Client, Settings);
+    private readonly ExerciseSyncRepository _exSync = new(fixture.Client, Settings);
+    private readonly WorkoutRepository _workoutRepo = new(fixture.Client, Settings);
 
     private static WorkoutEntity CreateWorkout(string userId) => new()
     {
@@ -532,11 +537,12 @@ public class ExerciseSyncRepositoryTests(DynamoDbFixture fixture)
 [Collection("DynamoDB")]
 public class LogSyncRepositoryTests(DynamoDbFixture fixture)
 {
-    private readonly WorkoutSyncRepository _workoutSync = new(fixture.Client);
-    private readonly MuscleGroupSyncRepository _mgSync = new(fixture.Client);
-    private readonly ExerciseSyncRepository _exSync = new(fixture.Client);
-    private readonly LogSyncRepository _logSync = new(fixture.Client);
-    private readonly WorkoutRepository _workoutRepo = new(fixture.Client);
+    private static readonly IOptions<DynamoDbSettings> Settings = Options.Create(new DynamoDbSettings());
+    private readonly WorkoutSyncRepository _workoutSync = new(fixture.Client, Settings);
+    private readonly MuscleGroupSyncRepository _mgSync = new(fixture.Client, Settings);
+    private readonly ExerciseSyncRepository _exSync = new(fixture.Client, Settings);
+    private readonly LogSyncRepository _logSync = new(fixture.Client, Settings);
+    private readonly WorkoutRepository _workoutRepo = new(fixture.Client, Settings);
 
     private static WorkoutEntity CreateWorkout(string userId) => new()
     {

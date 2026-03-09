@@ -1,14 +1,16 @@
 using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Options;
 using replog_application.Interfaces.SyncOperations;
 using replog_domain.Entities;
+using replog_infrastructure.Settings;
 using replog_shared.Json;
 
 namespace replog_infrastructure.Repositories.SyncOperations;
 
-public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient)
-    : BaseSyncRepository(dynamoDbClient), IWorkoutSyncRepository
+public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSettings> settings)
+    : BaseSyncRepository(dynamoDbClient, settings), IWorkoutSyncRepository
 {
     public async Task<bool> CreateWorkoutAsync(WorkoutEntity workout)
     {

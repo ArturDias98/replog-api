@@ -1,10 +1,12 @@
 using Amazon.DynamoDBv2;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using replog_application;
 using replog_application.Interfaces;
 using replog_application.Interfaces.SyncOperations;
 using replog_infrastructure.Repositories;
 using replog_infrastructure.Repositories.SyncOperations;
+using replog_infrastructure.Settings;
 using replog_tests_shared.Fixtures;
 
 namespace replog_application.tests.Fixtures;
@@ -22,6 +24,7 @@ public class ApplicationFixture : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddApplication();
         services.AddSingleton<IAmazonDynamoDB>(_dynamoDb.Client);
+        services.AddSingleton<IOptions<DynamoDbSettings>>(Options.Create(new DynamoDbSettings()));
         services.AddScoped<IWorkoutRepository, WorkoutRepository>();
         services.AddScoped<IWorkoutSyncRepository, WorkoutSyncRepository>();
         services.AddScoped<IMuscleGroupSyncRepository, MuscleGroupSyncRepository>();

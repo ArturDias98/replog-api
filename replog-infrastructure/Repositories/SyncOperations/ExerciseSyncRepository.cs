@@ -1,12 +1,14 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Options;
 using replog_application.Interfaces.SyncOperations;
 using replog_domain.Entities;
+using replog_infrastructure.Settings;
 
 namespace replog_infrastructure.Repositories.SyncOperations;
 
-public class ExerciseSyncRepository(IAmazonDynamoDB dynamoDbClient)
-    : BaseSyncRepository(dynamoDbClient), IExerciseSyncRepository
+public class ExerciseSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSettings> settings)
+    : BaseSyncRepository(dynamoDbClient, settings), IExerciseSyncRepository
 {
     public async Task<bool> AddExerciseAsync(
         string workoutId, string userId, ExerciseEntity exercise, DateTime timestamp)

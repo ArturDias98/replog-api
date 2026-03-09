@@ -1,14 +1,16 @@
 using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Options;
 using replog_domain.Entities;
+using replog_infrastructure.Settings;
 using replog_shared.Json;
 
 namespace replog_infrastructure.Repositories.SyncOperations;
 
-public abstract class BaseSyncRepository(IAmazonDynamoDB dynamoDbClient)
+public abstract class BaseSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSettings> settings)
 {
-    protected const string TableName = "replog-workouts";
+    protected readonly string TableName = settings.Value.TableName;
     protected readonly IAmazonDynamoDB DynamoDbClient = dynamoDbClient;
 
     protected static Dictionary<string, AttributeValue> WorkoutKey(string workoutId) =>

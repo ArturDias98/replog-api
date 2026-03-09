@@ -1,12 +1,14 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Options;
 using replog_application.Interfaces.SyncOperations;
 using replog_domain.Entities;
+using replog_infrastructure.Settings;
 
 namespace replog_infrastructure.Repositories.SyncOperations;
 
-public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient)
-    : BaseSyncRepository(dynamoDbClient), IMuscleGroupSyncRepository
+public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSettings> settings)
+    : BaseSyncRepository(dynamoDbClient, settings), IMuscleGroupSyncRepository
 {
     public async Task<bool> AddMuscleGroupAsync(
         string userId, MuscleGroupEntity muscleGroup, DateTime timestamp)

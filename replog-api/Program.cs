@@ -56,7 +56,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
@@ -73,5 +73,6 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapSyncEndpoints();
+app.MapHealthEndpoints();
 
 app.Run();

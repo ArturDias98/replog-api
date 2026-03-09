@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Options;
 using replog_infrastructure.Repositories;
+using replog_infrastructure.Settings;
 using replog_domain.Entities;
 using replog_tests_shared.Comparers;
 using replog_tests_shared.Fixtures;
@@ -8,7 +10,8 @@ namespace replog_infrastructure.tests.Repositories;
 [Collection("DynamoDB")]
 public class WorkoutRepositoryTests(DynamoDbFixture fixture)
 {
-    private readonly WorkoutRepository _repository = new(fixture.Client);
+    private static readonly IOptions<DynamoDbSettings> Settings = Options.Create(new DynamoDbSettings());
+    private readonly WorkoutRepository _repository = new(fixture.Client, Settings);
 
     private static WorkoutEntity CreateWorkout(string userId, string? id = null) => new()
     {

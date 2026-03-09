@@ -1,13 +1,15 @@
 using System.Globalization;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Options;
 using replog_application.Interfaces.SyncOperations;
 using replog_domain.Entities;
+using replog_infrastructure.Settings;
 
 namespace replog_infrastructure.Repositories.SyncOperations;
 
-public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient)
-    : BaseSyncRepository(dynamoDbClient), ILogSyncRepository
+public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSettings> settings)
+    : BaseSyncRepository(dynamoDbClient, settings), ILogSyncRepository
 {
     public async Task<bool> AddLogAsync(
         string workoutId, string userId, string mgId, string exId, LogEntity log, DateTime timestamp)
