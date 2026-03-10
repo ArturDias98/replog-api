@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -11,18 +12,24 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-// Authentication — Google JWT
+// Authentication — Custom JWT
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtSecret = jwtSection["Secret"] ?? throw new InvalidOperationException("Jwt:Secret is not configured.");
+var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://accounts.google.com";
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuers = ["accounts.google.com", "https://accounts.google.com"],
+            ValidIssuer = jwtSection["Issuer"] ?? "replog-api",
             ValidateAudience = true,
-            ValidAudience = builder.Configuration["Google:ClientId"],
-            ValidateLifetime = true
+            ValidAudience = jwtSection["Audience"] ?? "replog-client",
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = key,
+            ClockSkew = TimeSpan.FromMinutes(1)
         };
     });
 builder.Services.AddAuthorization();
@@ -72,6 +79,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 
+app.MapAuthEndpoints();
 app.MapSyncEndpoints();
 app.MapHealthEndpoints();
 

@@ -8,6 +8,7 @@ namespace replog_tests_shared.Fixtures;
 public class DynamoDbFixture : IAsyncLifetime
 {
     private const string TableName = "replog-workouts";
+    private const string UsersTableName = "replog-users";
     private const string UserIdIndexName = "UserIdIndex";
 
     private readonly IContainer _container = new ContainerBuilder()
@@ -52,6 +53,20 @@ public class DynamoDbFixture : IAsyncLifetime
                     Projection = new Projection { ProjectionType = ProjectionType.ALL },
                     ProvisionedThroughput = new ProvisionedThroughput(5, 5)
                 }
+            ],
+            ProvisionedThroughput = new ProvisionedThroughput(5, 5)
+        });
+
+        await Client.CreateTableAsync(new CreateTableRequest
+        {
+            TableName = UsersTableName,
+            KeySchema =
+            [
+                new KeySchemaElement("id", KeyType.HASH)
+            ],
+            AttributeDefinitions =
+            [
+                new AttributeDefinition("id", ScalarAttributeType.S)
             ],
             ProvisionedThroughput = new ProvisionedThroughput(5, 5)
         });
