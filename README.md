@@ -4,6 +4,11 @@ Workout logging REST API built with .NET 9 and Clean Architecture.
 
 > Work in progress
 
+## Project Documentation
+
+The project documentation (backend API spec, sync strategy, etc.) lives in a separate repository: [replog-docs](https://github.com/ArturDias98/replog-docs).
+When you need project requirements, API contracts, or sync behavior details, fetch the relevant files from that repository using `gh` or `WebFetch`.
+
 ## Tech Stack
 
 - .NET 9 / C# 13
