@@ -31,13 +31,25 @@ public class PushSyncCommandHandler(
 
         foreach (var change in orderedChanges)
         {
-            if (_processors.TryGetValue(change.EntityType, out var processor))
+            try
             {
-                await processor.ProcessAsync(change, command.UserId, response);
+                if (_processors.TryGetValue(change.EntityType, out var processor))
+                    await processor.ProcessAsync(change, command.UserId, response);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Change {ChangeId} ({EntityType}/{Action}) failed for user {UserId}",
+                    change.Id, change.EntityType, change.Action, command.UserId);
+                response.FailedChangeIds.Add(change.Id);
             }
         }
 
-        logger.LogInformation("Push sync processed {Count} change(s) for user {UserId}", command.Request.Changes.Count, command.UserId);
+        logger.LogInformation(
+            "Push sync for user {UserId}: {Acknowledged} acknowledged, {Failed} failed, {Conflicts} conflicts",
+            command.UserId,
+            response.AcknowledgedChangeIds.Count,
+            response.FailedChangeIds.Count,
+            response.Conflicts.Count);
 
         return Result<PushSyncResponse>.Success(response);
     }

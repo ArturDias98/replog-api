@@ -157,6 +157,7 @@ Receives a batch of changes from the client and applies them.
 ```json
 {
   "acknowledgedChangeIds": ["change-uuid-1", "change-uuid-2"],
+  "failedChangeIds": ["change-uuid-4"],
   "conflicts": [
     {
       "changeId": "change-uuid-3",
@@ -167,6 +168,8 @@ Receives a batch of changes from the client and applies them.
   "serverTimestamp": "2026-02-25T10:05:00.000Z"
 }
 ```
+
+> **Partial success:** The endpoint always returns 200 as long as the request passes initial validation. Each change is processed independently — changes that succeed are in `acknowledgedChangeIds`, changes that conflict are in `conflicts`, and changes that fail due to invalid data or a server error are in `failedChangeIds`. The client should retry `failedChangeIds` on the next push; idempotency guarantees make it safe to re-send the full batch.
 
 **Response (400 — validation error):**
 
