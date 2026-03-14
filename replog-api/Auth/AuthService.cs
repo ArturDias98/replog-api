@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+using replog_api.Settings;
 using replog_application.Interfaces;
 using replog_domain.Entities;
 using replog_shared.Models.Responses;
@@ -7,9 +9,12 @@ namespace replog_api.Auth;
 public class AuthService(
     IGoogleTokenValidator googleValidator,
     IUserRepository userRepository,
-    ITokenService tokenService
+    ITokenService tokenService,
+    IOptions<JwtSettings> jwtSettings
 ) : IAuthService
 {
+    private readonly JwtSettings _jwt = jwtSettings.Value;
+
     public async Task<AuthResponse> LoginAsync(string googleIdToken)
     {
         var googleUser = await googleValidator.ValidateAsync(googleIdToken)
@@ -42,7 +47,7 @@ public class AuthService(
         var tokenEntry = new RefreshTokenEntry
         {
             TokenHash = tokenService.HashToken(refreshToken),
-            ExpiresAt = now.AddDays(30)
+            ExpiresAt = now.AddDays(_jwt.RefreshTokenExpirationDays)
         };
         user.RefreshTokens.Add(tokenEntry);
 
@@ -54,7 +59,7 @@ public class AuthService(
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiresAt = now.AddMinutes(15)
+            ExpiresAt = now.AddMinutes(_jwt.AccessTokenExpirationMinutes)
         };
     }
 
@@ -80,7 +85,7 @@ public class AuthService(
         var newEntry = new RefreshTokenEntry
         {
             TokenHash = tokenService.HashToken(newRefreshToken),
-            ExpiresAt = now.AddDays(30)
+            ExpiresAt = now.AddDays(_jwt.RefreshTokenExpirationDays)
         };
 
         await userRepository.ReplaceRefreshTokenAsync(userId, providedHash, newEntry);
@@ -91,7 +96,7 @@ public class AuthService(
         {
             AccessToken = newAccessToken,
             RefreshToken = newRefreshToken,
-            ExpiresAt = now.AddMinutes(15)
+            ExpiresAt = now.AddMinutes(_jwt.AccessTokenExpirationMinutes)
         };
     }
 }
