@@ -86,7 +86,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseMiddleware<ValidationExceptionHandler>();
+app.UseMiddleware<GlobalExceptionHandler>();
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
