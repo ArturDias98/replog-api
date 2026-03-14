@@ -11,11 +11,11 @@ namespace replog_application.tests.Handlers.Workout;
 [Collection("Application")]
 public class PushSyncWorkoutUpdateTests(ApplicationFixture fixture)
 {
-    private async Task<PushSyncResponse> HandlePushSync(string userId, List<SyncChangeDto> changes)
+    private async Task<Result<PushSyncResponse>> HandlePushSync(string userId, List<SyncChangeDto> changes)
     {
         using var scope = fixture.Provider.CreateScope();
         var handler = scope.ServiceProvider
-            .GetRequiredService<ICommandHandler<PushSyncCommand, PushSyncResponse>>();
+            .GetRequiredService<ICommandHandler<PushSyncCommand, Result<PushSyncResponse>>>();
 
         return await handler.HandleAsync(new PushSyncCommand
         {
@@ -40,10 +40,11 @@ public class PushSyncWorkoutUpdateTests(ApplicationFixture fixture)
         var updateChange = SyncChangeBuilder.WorkoutUpdate(
             workoutId, "Pull Day", "2026-03-02", 1, updateTime, updateChangeId);
 
-        var response = await HandlePushSync(userId, [updateChange]);
+        var result = await HandlePushSync(userId, [updateChange]);
 
-        Assert.Contains(updateChangeId, response.AcknowledgedChangeIds);
-        Assert.Empty(response.Conflicts);
+        Assert.True(result.IsSuccess);
+        Assert.Contains(updateChangeId, result.Value!.AcknowledgedChangeIds);
+        Assert.Empty(result.Value.Conflicts);
     }
 
     [Fact]
@@ -65,10 +66,11 @@ public class PushSyncWorkoutUpdateTests(ApplicationFixture fixture)
         var updateChange = SyncChangeBuilder.WorkoutUpdate(
             workoutId, "Updated Title", "2026-03-02", 1, DateTime.UtcNow, updateChangeId);
 
-        var response = await HandlePushSync(userId, [updateChange]);
+        var result = await HandlePushSync(userId, [updateChange]);
 
-        Assert.Contains(updateChangeId, response.AcknowledgedChangeIds);
-        Assert.Empty(response.Conflicts);
+        Assert.True(result.IsSuccess);
+        Assert.Contains(updateChangeId, result.Value!.AcknowledgedChangeIds);
+        Assert.Empty(result.Value.Conflicts);
     }
 
     [Fact]
@@ -92,12 +94,13 @@ public class PushSyncWorkoutUpdateTests(ApplicationFixture fixture)
         var conflictChange = SyncChangeBuilder.WorkoutUpdate(
             workoutId, "Client Version", "2026-03-03", 2, clientUpdateTime, clientUpdateChangeId);
 
-        var response = await HandlePushSync(userId, [conflictChange]);
+        var result = await HandlePushSync(userId, [conflictChange]);
 
-        Assert.DoesNotContain(clientUpdateChangeId, response.AcknowledgedChangeIds);
-        Assert.Single(response.Conflicts);
-        Assert.Equal(clientUpdateChangeId, response.Conflicts[0].ChangeId);
-        Assert.Equal("server_wins", response.Conflicts[0].Resolution);
+        Assert.True(result.IsSuccess);
+        Assert.DoesNotContain(clientUpdateChangeId, result.Value!.AcknowledgedChangeIds);
+        Assert.Single(result.Value.Conflicts);
+        Assert.Equal(clientUpdateChangeId, result.Value.Conflicts[0].ChangeId);
+        Assert.Equal("server_wins", result.Value.Conflicts[0].Resolution);
     }
 
     [Fact]
@@ -110,9 +113,10 @@ public class PushSyncWorkoutUpdateTests(ApplicationFixture fixture)
         var updateChange = SyncChangeBuilder.WorkoutUpdate(
             nonexistentWorkoutId, "Some Title", "2026-03-01", 0, DateTime.UtcNow, updateChangeId);
 
-        var response = await HandlePushSync(userId, [updateChange]);
+        var result = await HandlePushSync(userId, [updateChange]);
 
-        Assert.Contains(updateChangeId, response.AcknowledgedChangeIds);
-        Assert.Empty(response.Conflicts);
+        Assert.True(result.IsSuccess);
+        Assert.Contains(updateChangeId, result.Value!.AcknowledgedChangeIds);
+        Assert.Empty(result.Value.Conflicts);
     }
 }

@@ -11,11 +11,11 @@ namespace replog_application.tests.Handlers.Workout;
 [Collection("Application")]
 public class PushSyncWorkoutDeleteTests(ApplicationFixture fixture)
 {
-    private async Task<PushSyncResponse> HandlePushSync(string userId, List<SyncChangeDto> changes)
+    private async Task<Result<PushSyncResponse>> HandlePushSync(string userId, List<SyncChangeDto> changes)
     {
         using var scope = fixture.Provider.CreateScope();
         var handler = scope.ServiceProvider
-            .GetRequiredService<ICommandHandler<PushSyncCommand, PushSyncResponse>>();
+            .GetRequiredService<ICommandHandler<PushSyncCommand, Result<PushSyncResponse>>>();
 
         return await handler.HandleAsync(new PushSyncCommand
         {
@@ -38,10 +38,11 @@ public class PushSyncWorkoutDeleteTests(ApplicationFixture fixture)
         var deleteChangeId = Guid.NewGuid().ToString();
         var deleteChange = SyncChangeBuilder.WorkoutDelete(workoutId, DateTime.UtcNow, deleteChangeId);
 
-        var response = await HandlePushSync(userId, [deleteChange]);
+        var result = await HandlePushSync(userId, [deleteChange]);
 
-        Assert.Contains(deleteChangeId, response.AcknowledgedChangeIds);
-        Assert.Empty(response.Conflicts);
+        Assert.True(result.IsSuccess);
+        Assert.Contains(deleteChangeId, result.Value!.AcknowledgedChangeIds);
+        Assert.Empty(result.Value.Conflicts);
 
         // Verify workout no longer appears in pull sync
         using var scope = fixture.Provider.CreateScope();
@@ -68,10 +69,11 @@ public class PushSyncWorkoutDeleteTests(ApplicationFixture fixture)
         var secondDeleteChangeId = Guid.NewGuid().ToString();
         var secondDelete = SyncChangeBuilder.WorkoutDelete(workoutId, DateTime.UtcNow, secondDeleteChangeId);
 
-        var response = await HandlePushSync(userId, [secondDelete]);
+        var result = await HandlePushSync(userId, [secondDelete]);
 
-        Assert.Contains(secondDeleteChangeId, response.AcknowledgedChangeIds);
-        Assert.Empty(response.Conflicts);
+        Assert.True(result.IsSuccess);
+        Assert.Contains(secondDeleteChangeId, result.Value!.AcknowledgedChangeIds);
+        Assert.Empty(result.Value.Conflicts);
     }
 
     [Fact]
@@ -82,9 +84,10 @@ public class PushSyncWorkoutDeleteTests(ApplicationFixture fixture)
         var deleteChange = SyncChangeBuilder.WorkoutDelete(
             Guid.NewGuid().ToString(), DateTime.UtcNow, deleteChangeId);
 
-        var response = await HandlePushSync(userId, [deleteChange]);
+        var result = await HandlePushSync(userId, [deleteChange]);
 
-        Assert.Contains(deleteChangeId, response.AcknowledgedChangeIds);
-        Assert.Empty(response.Conflicts);
+        Assert.True(result.IsSuccess);
+        Assert.Contains(deleteChangeId, result.Value!.AcknowledgedChangeIds);
+        Assert.Empty(result.Value.Conflicts);
     }
 }

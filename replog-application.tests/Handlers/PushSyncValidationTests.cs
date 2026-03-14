@@ -1,4 +1,3 @@
-using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using replog_application.Commands;
 using replog_application.Interfaces;
@@ -13,11 +12,11 @@ namespace replog_application.tests.Handlers;
 [Collection("Application")]
 public class PushSyncValidationTests(ApplicationFixture fixture)
 {
-    private async Task<PushSyncResponse> HandlePushSync(string userId, List<SyncChangeDto> changes)
+    private async Task<Result<PushSyncResponse>> HandlePushSync(string userId, List<SyncChangeDto> changes)
     {
         using var scope = fixture.Provider.CreateScope();
         var handler = scope.ServiceProvider
-            .GetRequiredService<ICommandHandler<PushSyncCommand, PushSyncResponse>>();
+            .GetRequiredService<ICommandHandler<PushSyncCommand, Result<PushSyncResponse>>>();
 
         return await handler.HandleAsync(new PushSyncCommand
         {
@@ -27,16 +26,18 @@ public class PushSyncValidationTests(ApplicationFixture fixture)
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowValidationException_WhenChangesListIsEmpty()
+    public async Task HandleAsync_ShouldReturnValidationError_WhenChangesListIsEmpty()
     {
         var userId = Guid.NewGuid().ToString();
 
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            HandlePushSync(userId, []));
+        var result = await HandlePushSync(userId, []);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("validation_error", result.ErrorCode);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowValidationException_WhenChangeHasEmptyId()
+    public async Task HandleAsync_ShouldReturnValidationError_WhenChangeHasEmptyId()
     {
         var userId = Guid.NewGuid().ToString();
 
@@ -50,12 +51,14 @@ public class PushSyncValidationTests(ApplicationFixture fixture)
                 new { id = "w1", userId, title = "T", date = "2026-03-01", orderIndex = 0 })
         };
 
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            HandlePushSync(userId, [change]));
+        var result = await HandlePushSync(userId, [change]);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("validation_error", result.ErrorCode);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowValidationException_WhenEntityTypeIsInvalid()
+    public async Task HandleAsync_ShouldReturnValidationError_WhenEntityTypeIsInvalid()
     {
         var userId = Guid.NewGuid().ToString();
 
@@ -69,12 +72,14 @@ public class PushSyncValidationTests(ApplicationFixture fixture)
                 new { id = "w1", userId, title = "T", date = "2026-03-01", orderIndex = 0 })
         };
 
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            HandlePushSync(userId, [change]));
+        var result = await HandlePushSync(userId, [change]);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("validation_error", result.ErrorCode);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowValidationException_WhenActionIsInvalid()
+    public async Task HandleAsync_ShouldReturnValidationError_WhenActionIsInvalid()
     {
         var userId = Guid.NewGuid().ToString();
 
@@ -88,12 +93,14 @@ public class PushSyncValidationTests(ApplicationFixture fixture)
                 new { id = "w1", userId, title = "T", date = "2026-03-01", orderIndex = 0 })
         };
 
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            HandlePushSync(userId, [change]));
+        var result = await HandlePushSync(userId, [change]);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("validation_error", result.ErrorCode);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowValidationException_WhenTimestampIsDefault()
+    public async Task HandleAsync_ShouldReturnValidationError_WhenTimestampIsDefault()
     {
         var userId = Guid.NewGuid().ToString();
 
@@ -107,12 +114,14 @@ public class PushSyncValidationTests(ApplicationFixture fixture)
                 new { id = "w1", userId, title = "T", date = "2026-03-01", orderIndex = 0 })
         };
 
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            HandlePushSync(userId, [change]));
+        var result = await HandlePushSync(userId, [change]);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("validation_error", result.ErrorCode);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowValidationException_WhenDataIsNull()
+    public async Task HandleAsync_ShouldReturnValidationError_WhenDataIsNull()
     {
         var userId = Guid.NewGuid().ToString();
 
@@ -125,12 +134,14 @@ public class PushSyncValidationTests(ApplicationFixture fixture)
             Data = null
         };
 
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            HandlePushSync(userId, [change]));
+        var result = await HandlePushSync(userId, [change]);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("validation_error", result.ErrorCode);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowValidationException_WhenChangesExceedsMaximum()
+    public async Task HandleAsync_ShouldReturnValidationError_WhenChangesExceedsMaximum()
     {
         var userId = Guid.NewGuid().ToString();
 
@@ -139,7 +150,9 @@ public class PushSyncValidationTests(ApplicationFixture fixture)
                 Guid.NewGuid().ToString(), userId))
             .ToList();
 
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            HandlePushSync(userId, changes));
+        var result = await HandlePushSync(userId, changes);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("validation_error", result.ErrorCode);
     }
 }

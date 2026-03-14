@@ -1,4 +1,5 @@
 using replog_api.Auth;
+using replog_application;
 using replog_application.Commands;
 using replog_application.Interfaces;
 using replog_application.Queries;
@@ -17,23 +18,31 @@ public static class SyncEndpoints
 
         group.MapPost("/push", async (
             PushSyncRequest request,
-            ICommandHandler<PushSyncCommand, PushSyncResponse> handler,
+            ICommandHandler<PushSyncCommand, Result<PushSyncResponse>> handler,
             HttpContext context) =>
         {
             var userId = context.User.GetUserId();
             var command = new PushSyncCommand { UserId = userId, Request = request };
             var result = await handler.HandleAsync(command);
-            return Results.Ok(result);
+            if (!result.IsSuccess)
+                return Results.Json(
+                    new ErrorResponse { Error = result.ErrorCode!, Message = result.ErrorMessage! },
+                    statusCode: StatusCodes.Status400BadRequest);
+            return Results.Ok(result.Value);
         });
 
         group.MapGet("/pull", async (
-            IQueryHandler<PullSyncQuery, PullSyncResponse> handler,
+            IQueryHandler<PullSyncQuery, Result<PullSyncResponse>> handler,
             HttpContext context) =>
         {
             var userId = context.User.GetUserId();
             var query = new PullSyncQuery { UserId = userId };
             var result = await handler.HandleAsync(query);
-            return Results.Ok(result);
+            if (!result.IsSuccess)
+                return Results.Json(
+                    new ErrorResponse { Error = result.ErrorCode!, Message = result.ErrorMessage! },
+                    statusCode: StatusCodes.Status500InternalServerError);
+            return Results.Ok(result.Value);
         });
     }
 }

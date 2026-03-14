@@ -19,8 +19,8 @@ public static class DependencyInjection
         services.AddValidatorsFromAssemblyContaining<PushSyncRequestValidator>();
 
         // CQRS handlers
-        services.AddScoped<ICommandHandler<PushSyncCommand, PushSyncResponse>, PushSyncCommandHandler>();
-        services.AddScoped<IQueryHandler<PullSyncQuery, PullSyncResponse>, PullSyncQueryHandler>();
+        services.AddScoped<ICommandHandler<PushSyncCommand, Result<PushSyncResponse>>, PushSyncCommandHandler>();
+        services.AddScoped<IQueryHandler<PullSyncQuery, Result<PullSyncResponse>>, PullSyncQueryHandler>();
 
         // Change processors
         services.AddScoped<IChangeProcessor, WorkoutChangeProcessor>();

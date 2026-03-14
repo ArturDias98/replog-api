@@ -1,5 +1,6 @@
 using Amazon.DynamoDBv2;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using replog_application;
 using replog_application.Interfaces;
@@ -22,6 +23,7 @@ public class ApplicationFixture : IAsyncLifetime
         await _dynamoDb.InitializeAsync();
 
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddApplication();
         services.AddSingleton<IAmazonDynamoDB>(_dynamoDb.Client);
         services.AddSingleton<IOptions<DynamoDbSettings>>(Options.Create(new DynamoDbSettings()));

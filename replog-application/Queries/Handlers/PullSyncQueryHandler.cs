@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using replog_application.Interfaces;
 using replog_application.Mappers;
 using replog_shared.Models.Responses;
@@ -5,16 +6,21 @@ using replog_shared.Models.Responses;
 namespace replog_application.Queries.Handlers;
 
 public class PullSyncQueryHandler(
-    IWorkoutRepository workoutRepository) : IQueryHandler<PullSyncQuery, PullSyncResponse>
+    IWorkoutRepository workoutRepository,
+    ILogger<PullSyncQueryHandler> logger) : IQueryHandler<PullSyncQuery, Result<PullSyncResponse>>
 {
-    public async Task<PullSyncResponse> HandleAsync(PullSyncQuery query)
+    public async Task<Result<PullSyncResponse>> HandleAsync(PullSyncQuery query)
     {
         var workouts = await workoutRepository.GetByUserIdAsync(query.UserId);
 
-        return new PullSyncResponse
+        var response = new PullSyncResponse
         {
             Workouts = workouts.Select(WorkoutMapper.ToDto).ToList(),
             ServerTimestamp = DateTime.UtcNow
         };
+
+        logger.LogInformation("Pull sync returned {Count} workout(s) for user {UserId}", response.Workouts.Count, query.UserId);
+
+        return Result<PullSyncResponse>.Success(response);
     }
 }

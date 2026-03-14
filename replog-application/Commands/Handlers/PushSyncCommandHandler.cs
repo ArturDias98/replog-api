@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using replog_application.Interfaces;
 using replog_shared.Enums;
 using replog_shared.Models.Requests;
@@ -8,14 +9,21 @@ namespace replog_application.Commands.Handlers;
 
 public class PushSyncCommandHandler(
     IValidator<PushSyncRequest> pushValidator,
-    IEnumerable<IChangeProcessor> changeProcessors) : ICommandHandler<PushSyncCommand, PushSyncResponse>
+    IEnumerable<IChangeProcessor> changeProcessors,
+    ILogger<PushSyncCommandHandler> logger) : ICommandHandler<PushSyncCommand, Result<PushSyncResponse>>
 {
     private readonly Dictionary<EntityType, IChangeProcessor> _processors =
         changeProcessors.ToDictionary(p => p.EntityType);
 
-    public async Task<PushSyncResponse> HandleAsync(PushSyncCommand command)
+    public async Task<Result<PushSyncResponse>> HandleAsync(PushSyncCommand command)
     {
-        await pushValidator.ValidateAndThrowAsync(command.Request);
+        var validation = await pushValidator.ValidateAsync(command.Request);
+        if (!validation.IsValid)
+        {
+            var errors = string.Join("; ", validation.Errors.Select(e => e.ErrorMessage));
+            logger.LogWarning("Push sync validation failed for user {UserId}: {Errors}", command.UserId, errors);
+            return Result<PushSyncResponse>.Failure("validation_error", errors);
+        }
 
         var response = new PushSyncResponse { ServerTimestamp = DateTime.UtcNow };
 
@@ -29,6 +37,8 @@ public class PushSyncCommandHandler(
             }
         }
 
-        return response;
+        logger.LogInformation("Push sync processed {Count} change(s) for user {UserId}", command.Request.Changes.Count, command.UserId);
+
+        return Result<PushSyncResponse>.Success(response);
     }
 }
