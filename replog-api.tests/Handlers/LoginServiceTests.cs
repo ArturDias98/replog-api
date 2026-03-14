@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using replog_api.Auth;
+using replog_api.Settings;
 using replog_application.Interfaces;
 using replog_domain.Entities;
 
@@ -14,7 +16,8 @@ public class LoginServiceTests
 
     public LoginServiceTests()
     {
-        _service = new AuthService(_googleValidator, _userRepository, _tokenService);
+        var jwtSettings = Options.Create(new JwtSettings { Secret = "test-secret", AccessTokenExpirationMinutes = 15, RefreshTokenExpirationDays = 30 });
+        _service = new AuthService(_googleValidator, _userRepository, _tokenService, jwtSettings);
     }
 
     [Fact]
@@ -34,10 +37,10 @@ public class LoginServiceTests
 
         var result = await _service.LoginAsync("valid-token");
 
-        Assert.NotNull(result);
-        Assert.Equal("access-token", result.AccessToken);
-        Assert.Equal("refresh-token", result.RefreshToken);
-        Assert.True(result.ExpiresAt > DateTime.UtcNow);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("access-token", result.Value!.AccessToken);
+        Assert.Equal("refresh-token", result.Value.RefreshToken);
+        Assert.True(result.Value.ExpiresAt > DateTime.UtcNow);
     }
 
     [Fact]
@@ -98,11 +101,14 @@ public class LoginServiceTests
     }
 
     [Fact]
-    public async Task LoginAsync_ShouldThrowUnauthorized_WhenGoogleTokenIsInvalid()
+    public async Task LoginAsync_ShouldReturnFailure_WhenGoogleTokenIsInvalid()
     {
         _googleValidator.ValidateAsync("invalid-token").Returns((GoogleUserInfo?)null);
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _service.LoginAsync("invalid-token"));
+        var result = await _service.LoginAsync("invalid-token");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("invalid_google_token", result.ErrorCode);
     }
 
     [Fact]

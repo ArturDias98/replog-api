@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11519.219 insiders
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-api", "replog-api\replog-api.csproj", "{F3BD0613-2B96-43C8-BE1D-AB2D16220518}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-shared", "replog-shared\replog-shared.csproj", "{A99E69D9-7C5C-49CF-8470-B6BDBC77F2B4}"
@@ -146,5 +149,9 @@ Global
 		{353BC65F-8EF2-4353-802C-572365DDE88F} = {D2D31961-9576-4768-970C-6D69B5151F55}
 		{59B31D22-B59B-4806-82F7-CD6E45EA886D} = {D2D31961-9576-4768-970C-6D69B5151F55}
 		{CD7BB9B8-9192-4414-9413-3F9047EBBEDC} = {D2D31961-9576-4768-970C-6D69B5151F55}
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1} = {D2D31961-9576-4768-970C-6D69B5151F55}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7E2010A6-0A10-4B0F-A62C-43F24BA9C4A7}
 	EndGlobalSection
 EndGlobal

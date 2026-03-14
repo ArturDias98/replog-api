@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using replog_api.Settings;
+using replog_application;
 using replog_application.Interfaces;
 using replog_domain.Entities;
 using replog_shared.Models.Responses;
@@ -15,10 +16,11 @@ public class AuthService(
 {
     private readonly JwtSettings _jwt = jwtSettings.Value;
 
-    public async Task<AuthResponse> LoginAsync(string googleIdToken)
+    public async Task<Result<AuthResponse>> LoginAsync(string googleIdToken)
     {
-        var googleUser = await googleValidator.ValidateAsync(googleIdToken)
-            ?? throw new UnauthorizedAccessException("Invalid Google ID token.");
+        var googleUser = await googleValidator.ValidateAsync(googleIdToken);
+        if (googleUser == null)
+            return Result<AuthResponse>.Failure("invalid_google_token", "Invalid Google ID token.");
 
         var now = DateTime.UtcNow;
         var existingUser = await userRepository.GetByIdAsync(googleUser.Subject);
@@ -55,30 +57,32 @@ public class AuthService(
 
         var accessToken = tokenService.GenerateAccessToken(user.Id, user.Email, user.DisplayName, user.AvatarUrl);
 
-        return new AuthResponse
+        return Result<AuthResponse>.Success(new AuthResponse
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpiresAt = now.AddMinutes(_jwt.AccessTokenExpirationMinutes)
-        };
+        });
     }
 
-    public async Task<AuthResponse> RefreshTokenAsync(string accessToken, string refreshToken)
+    public async Task<Result<AuthResponse>> RefreshTokenAsync(string accessToken, string refreshToken)
     {
-        var userId = tokenService.GetUserIdFromExpiredToken(accessToken)
-            ?? throw new UnauthorizedAccessException("Invalid access token.");
+        var userId = tokenService.GetUserIdFromExpiredToken(accessToken);
+        if (userId == null)
+            return Result<AuthResponse>.Failure("invalid_access_token", "Invalid access token.");
 
-        var user = await userRepository.GetByIdAsync(userId)
-            ?? throw new UnauthorizedAccessException("User not found.");
+        var user = await userRepository.GetByIdAsync(userId);
+        if (user == null)
+            return Result<AuthResponse>.Failure("user_not_found", "User not found.");
 
         var providedHash = tokenService.HashToken(refreshToken);
         var matchingToken = user.RefreshTokens.Find(rt => rt.TokenHash == providedHash);
 
         if (matchingToken == null)
-            throw new UnauthorizedAccessException("Invalid refresh token.");
+            return Result<AuthResponse>.Failure("invalid_refresh_token", "Invalid refresh token.");
 
         if (matchingToken.ExpiresAt < DateTime.UtcNow)
-            throw new UnauthorizedAccessException("Refresh token has expired.");
+            return Result<AuthResponse>.Failure("token_expired", "Refresh token has expired.");
 
         var now = DateTime.UtcNow;
         var newRefreshToken = tokenService.GenerateRefreshToken();
@@ -92,11 +96,11 @@ public class AuthService(
 
         var newAccessToken = tokenService.GenerateAccessToken(user.Id, user.Email, user.DisplayName, user.AvatarUrl);
 
-        return new AuthResponse
+        return Result<AuthResponse>.Success(new AuthResponse
         {
             AccessToken = newAccessToken,
             RefreshToken = newRefreshToken,
             ExpiresAt = now.AddMinutes(_jwt.AccessTokenExpirationMinutes)
-        };
+        });
     }
 }
