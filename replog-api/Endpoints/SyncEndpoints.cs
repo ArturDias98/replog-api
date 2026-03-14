@@ -32,17 +32,12 @@ public static class SyncEndpoints
         });
 
         group.MapGet("/pull", async (
-            IQueryHandler<PullSyncQuery, Result<PullSyncResponse>> handler,
+            IQueryHandler<PullSyncQuery, PullSyncResponse> handler,
             HttpContext context) =>
         {
             var userId = context.User.GetUserId();
             var query = new PullSyncQuery { UserId = userId };
-            var result = await handler.HandleAsync(query);
-            if (!result.IsSuccess)
-                return Results.Json(
-                    new ErrorResponse { Error = result.ErrorCode!, Message = result.ErrorMessage! },
-                    statusCode: StatusCodes.Status500InternalServerError);
-            return Results.Ok(result.Value);
+            return Results.Ok(await handler.HandleAsync(query));
         });
     }
 }

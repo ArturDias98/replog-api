@@ -7,9 +7,9 @@ namespace replog_application.Queries.Handlers;
 
 public class PullSyncQueryHandler(
     IWorkoutRepository workoutRepository,
-    ILogger<PullSyncQueryHandler> logger) : IQueryHandler<PullSyncQuery, Result<PullSyncResponse>>
+    ILogger<PullSyncQueryHandler> logger) : IQueryHandler<PullSyncQuery, PullSyncResponse>
 {
-    public async Task<Result<PullSyncResponse>> HandleAsync(PullSyncQuery query)
+    public async Task<PullSyncResponse> HandleAsync(PullSyncQuery query)
     {
         var workouts = await workoutRepository.GetByUserIdAsync(query.UserId);
 
@@ -21,6 +21,6 @@ public class PullSyncQueryHandler(
 
         logger.LogInformation("Pull sync returned {Count} workout(s) for user {UserId}", response.Workouts.Count, query.UserId);
 
-        return Result<PullSyncResponse>.Success(response);
+        return response;
     }
 }

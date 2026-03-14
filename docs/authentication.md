@@ -38,10 +38,10 @@ Exchanges a Google ID token for API tokens. No authentication required.
 
 **Error Responses:**
 
-| Status | Reason |
-|--------|--------|
-| 400 | Missing or empty `googleIdToken` |
-| 401 | Invalid or expired Google ID token |
+| Status | Error code             | Reason                                             |
+|--------|------------------------|----------------------------------------------------|
+| 400    | *(model binding)*      | Missing or empty `googleIdToken` (required field)  |
+| 401    | `invalid_google_token` | Google ID token is invalid or expired              |
 
 ### POST /api/auth/refresh
 
@@ -68,10 +68,13 @@ Exchanges an expired access token + valid refresh token for a new pair of tokens
 
 **Error Responses:**
 
-| Status | Reason |
-|--------|--------|
-| 400 | Missing or empty `accessToken` or `refreshToken` |
-| 401 | Invalid access token, user not found, refresh token expired, or refresh token mismatch |
+| Status | Error code                | Reason                                               |
+|--------|---------------------------|------------------------------------------------------|
+| 400    | *(model binding)*         | Missing or empty `accessToken` or `refreshToken`     |
+| 401    | `invalid_access_token`    | Access token cannot be parsed or has invalid signing |
+| 401    | `user_not_found`          | User extracted from token no longer exists           |
+| 401    | `invalid_refresh_token`   | Refresh token does not match any stored token        |
+| 401    | `token_expired`           | Refresh token has expired                            |
 
 > **Note:** After a successful refresh, a new refresh token is issued and the previous one is invalidated. Always store the new refresh token from the response.
 
@@ -84,18 +87,12 @@ Exchanges an expired access token + valid refresh token for a new pair of tokens
 
 The access token JWT contains the following claims:
 
-| Claim | Description |
-|-------|-------------|
-| `sub` | User ID (Google subject identifier) |
-| `email` | User's email address |
-| `name` | User's display name |
-| `picture` | User's avatar URL (only present if available) |
-| `jti` | Unique token identifier |
-| `iss` | Issuer (`replog-api`) |
-| `aud` | Audience (`replog-client`) |
-| `exp` | Expiration timestamp |
-
-The client can decode the JWT payload (base64) to read user profile info (`name`, `picture`, `email`) without a separate API call.
+| Claim | Description                          |
+|-------|--------------------------------------|
+| `sub` | User ID (Google subject identifier)  |
+| `iss` | Issuer (`replog-api`)                |
+| `aud` | Audience (`replog-client`)           |
+| `exp` | Expiration timestamp                 |
 
 ## Client Integration Guide
 

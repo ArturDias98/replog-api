@@ -20,7 +20,7 @@ public static class DependencyInjection
 
         // CQRS handlers
         services.AddScoped<ICommandHandler<PushSyncCommand, Result<PushSyncResponse>>, PushSyncCommandHandler>();
-        services.AddScoped<IQueryHandler<PullSyncQuery, Result<PullSyncResponse>>, PullSyncQueryHandler>();
+        services.AddScoped<IQueryHandler<PullSyncQuery, PullSyncResponse>, PullSyncQueryHandler>();
 
         // Change processors
         services.AddScoped<IChangeProcessor, WorkoutChangeProcessor>();

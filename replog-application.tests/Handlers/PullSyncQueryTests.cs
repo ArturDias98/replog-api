@@ -12,11 +12,11 @@ namespace replog_application.tests.Handlers;
 [Collection("Application")]
 public class PullSyncQueryTests(ApplicationFixture fixture)
 {
-    private async Task<Result<PullSyncResponse>> HandlePullSync(string userId)
+    private async Task<PullSyncResponse> HandlePullSync(string userId)
     {
         using var scope = fixture.Provider.CreateScope();
         var handler = scope.ServiceProvider
-            .GetRequiredService<IQueryHandler<PullSyncQuery, Result<PullSyncResponse>>>();
+            .GetRequiredService<IQueryHandler<PullSyncQuery, PullSyncResponse>>();
 
         return await handler.HandleAsync(new PullSyncQuery { UserId = userId });
     }
@@ -46,10 +46,9 @@ public class PullSyncQueryTests(ApplicationFixture fixture)
 
         var result = await HandlePullSync(userId);
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Value!.Workouts.Count);
-        Assert.Contains(result.Value.Workouts, w => w.Title == "Push Day");
-        Assert.Contains(result.Value.Workouts, w => w.Title == "Pull Day");
+        Assert.Equal(2, result.Workouts.Count);
+        Assert.Contains(result.Workouts, w => w.Title == "Push Day");
+        Assert.Contains(result.Workouts, w => w.Title == "Pull Day");
     }
 
     [Fact]
@@ -59,8 +58,7 @@ public class PullSyncQueryTests(ApplicationFixture fixture)
 
         var result = await HandlePullSync(userId);
 
-        Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value!.Workouts);
+        Assert.Empty(result.Workouts);
     }
 
     [Fact]
@@ -82,8 +80,7 @@ public class PullSyncQueryTests(ApplicationFixture fixture)
 
         var result = await HandlePullSync(userId);
 
-        Assert.True(result.IsSuccess);
-        Assert.Single(result.Value!.Workouts);
-        Assert.Equal("Active Workout", result.Value.Workouts[0].Title);
+        Assert.Single(result.Workouts);
+        Assert.Equal("Active Workout", result.Workouts[0].Title);
     }
 }
