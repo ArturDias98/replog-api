@@ -1,25 +1,24 @@
 using NSubstitute;
-using replog_application.Commands;
-using replog_application.Commands.Handlers;
+using replog_api.Auth;
 using replog_application.Interfaces;
 using replog_domain.Entities;
 
-namespace replog_application.tests.Handlers;
+namespace replog_api.tests.Handlers;
 
-public class LoginCommandHandlerTests
+public class LoginServiceTests
 {
     private readonly IGoogleTokenValidator _googleValidator = Substitute.For<IGoogleTokenValidator>();
     private readonly IUserRepository _userRepository = Substitute.For<IUserRepository>();
     private readonly ITokenService _tokenService = Substitute.For<ITokenService>();
-    private readonly LoginCommandHandler _handler;
+    private readonly AuthService _service;
 
-    public LoginCommandHandlerTests()
+    public LoginServiceTests()
     {
-        _handler = new LoginCommandHandler(_googleValidator, _userRepository, _tokenService);
+        _service = new AuthService(_googleValidator, _userRepository, _tokenService);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnAuthResponse_WhenGoogleTokenIsValid()
+    public async Task LoginAsync_ShouldReturnAuthResponse_WhenGoogleTokenIsValid()
     {
         var googleUser = new GoogleUserInfo
         {
@@ -33,8 +32,7 @@ public class LoginCommandHandlerTests
         _tokenService.GenerateRefreshToken().Returns("refresh-token");
         _tokenService.HashToken("refresh-token").Returns("hashed-refresh-token");
 
-        var command = new LoginCommand { GoogleIdToken = "valid-token" };
-        var result = await _handler.HandleAsync(command);
+        var result = await _service.LoginAsync("valid-token");
 
         Assert.NotNull(result);
         Assert.Equal("access-token", result.AccessToken);
@@ -43,7 +41,7 @@ public class LoginCommandHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldCreateNewUser_WhenUserDoesNotExist()
+    public async Task LoginAsync_ShouldCreateNewUser_WhenUserDoesNotExist()
     {
         var googleUser = new GoogleUserInfo
         {
@@ -57,8 +55,7 @@ public class LoginCommandHandlerTests
         _tokenService.GenerateRefreshToken().Returns("refresh-token");
         _tokenService.HashToken("refresh-token").Returns("hashed");
 
-        var command = new LoginCommand { GoogleIdToken = "valid-token" };
-        await _handler.HandleAsync(command);
+        await _service.LoginAsync("valid-token");
 
         await _userRepository.Received(1).UpsertAsync(Arg.Is<UserEntity>(u =>
             u.Id == "new-user-sub" &&
@@ -69,7 +66,7 @@ public class LoginCommandHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldUpdateExistingUser_WhenUserExists()
+    public async Task LoginAsync_ShouldUpdateExistingUser_WhenUserExists()
     {
         var existingUser = new UserEntity
         {
@@ -92,8 +89,7 @@ public class LoginCommandHandlerTests
         _tokenService.GenerateRefreshToken().Returns("refresh-token");
         _tokenService.HashToken("refresh-token").Returns("hashed");
 
-        var command = new LoginCommand { GoogleIdToken = "valid-token" };
-        await _handler.HandleAsync(command);
+        await _service.LoginAsync("valid-token");
 
         await _userRepository.Received(1).UpsertAsync(Arg.Is<UserEntity>(u =>
             u.Email == "new@example.com" &&
@@ -102,17 +98,15 @@ public class LoginCommandHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowUnauthorized_WhenGoogleTokenIsInvalid()
+    public async Task LoginAsync_ShouldThrowUnauthorized_WhenGoogleTokenIsInvalid()
     {
         _googleValidator.ValidateAsync("invalid-token").Returns((GoogleUserInfo?)null);
 
-        var command = new LoginCommand { GoogleIdToken = "invalid-token" };
-
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _handler.HandleAsync(command));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _service.LoginAsync("invalid-token"));
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldAddTokenToList_WhenUserHasExistingTokens()
+    public async Task LoginAsync_ShouldAddTokenToList_WhenUserHasExistingTokens()
     {
         var existingUser = new UserEntity
         {
@@ -142,8 +136,7 @@ public class LoginCommandHandlerTests
         _tokenService.HashToken("new-refresh").Returns("new-hash");
         _tokenService.GenerateAccessToken(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>()).Returns("access");
 
-        var command = new LoginCommand { GoogleIdToken = "token" };
-        await _handler.HandleAsync(command);
+        await _service.LoginAsync("token");
 
         await _userRepository.Received(1).UpsertAsync(Arg.Is<UserEntity>(u =>
             u.RefreshTokens.Count == 2 &&
@@ -152,7 +145,7 @@ public class LoginCommandHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldRemoveExpiredTokens_WhenLoginOccurs()
+    public async Task LoginAsync_ShouldRemoveExpiredTokens_WhenLoginOccurs()
     {
         var existingUser = new UserEntity
         {
@@ -187,8 +180,7 @@ public class LoginCommandHandlerTests
         _tokenService.HashToken("new-refresh").Returns("new-hash");
         _tokenService.GenerateAccessToken(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>()).Returns("access");
 
-        var command = new LoginCommand { GoogleIdToken = "token" };
-        await _handler.HandleAsync(command);
+        await _service.LoginAsync("token");
 
         await _userRepository.Received(1).UpsertAsync(Arg.Is<UserEntity>(u =>
             u.RefreshTokens.Count == 2 &&

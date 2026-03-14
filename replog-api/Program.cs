@@ -3,8 +3,10 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using replog_api.Auth;
 using replog_api.Endpoints;
 using replog_api.Middleware;
+using replog_api.Settings;
 using replog_application;
 using replog_infrastructure;
 
@@ -61,6 +63,12 @@ builder.Services.AddCors(options =>
             .WithMethods("GET", "POST");
     });
 });
+
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection("Google"));
+builder.Services.AddSingleton<IGoogleTokenValidator, GoogleTokenValidator>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);

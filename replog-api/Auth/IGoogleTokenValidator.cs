@@ -1,4 +1,4 @@
-namespace replog_application.Interfaces;
+namespace replog_api.Auth;
 
 public interface IGoogleTokenValidator
 {

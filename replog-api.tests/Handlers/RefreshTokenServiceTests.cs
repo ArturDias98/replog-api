@@ -1,24 +1,23 @@
 using NSubstitute;
-using replog_application.Commands;
-using replog_application.Commands.Handlers;
+using replog_api.Auth;
 using replog_application.Interfaces;
 using replog_domain.Entities;
 
-namespace replog_application.tests.Handlers;
+namespace replog_api.tests.Handlers;
 
-public class RefreshTokenCommandHandlerTests
+public class RefreshTokenServiceTests
 {
     private readonly IUserRepository _userRepository = Substitute.For<IUserRepository>();
     private readonly ITokenService _tokenService = Substitute.For<ITokenService>();
-    private readonly RefreshTokenCommandHandler _handler;
+    private readonly AuthService _service;
 
-    public RefreshTokenCommandHandlerTests()
+    public RefreshTokenServiceTests()
     {
-        _handler = new RefreshTokenCommandHandler(_userRepository, _tokenService);
+        _service = new AuthService(Substitute.For<IGoogleTokenValidator>(), _userRepository, _tokenService);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnNewTokens_WhenRefreshTokenIsValid()
+    public async Task RefreshTokenAsync_ShouldReturnNewTokens_WhenRefreshTokenIsValid()
     {
         var user = new UserEntity
         {
@@ -43,12 +42,7 @@ public class RefreshTokenCommandHandlerTests
         _tokenService.HashToken("new-refresh-token").Returns("new-hash");
         _tokenService.GenerateAccessToken("user-123", "user@example.com", "User", Arg.Any<string?>()).Returns("new-access-token");
 
-        var command = new RefreshTokenCommand
-        {
-            AccessToken = "expired-access",
-            RefreshToken = "valid-refresh"
-        };
-        var result = await _handler.HandleAsync(command);
+        var result = await _service.RefreshTokenAsync("expired-access", "valid-refresh");
 
         Assert.Equal("new-access-token", result.AccessToken);
         Assert.Equal("new-refresh-token", result.RefreshToken);
@@ -56,36 +50,26 @@ public class RefreshTokenCommandHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowUnauthorized_WhenAccessTokenIsInvalid()
+    public async Task RefreshTokenAsync_ShouldThrowUnauthorized_WhenAccessTokenIsInvalid()
     {
         _tokenService.GetUserIdFromExpiredToken("bad-token").Returns((string?)null);
 
-        var command = new RefreshTokenCommand
-        {
-            AccessToken = "bad-token",
-            RefreshToken = "some-refresh"
-        };
-
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _handler.HandleAsync(command));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _service.RefreshTokenAsync("bad-token", "some-refresh"));
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowUnauthorized_WhenUserNotFound()
+    public async Task RefreshTokenAsync_ShouldThrowUnauthorized_WhenUserNotFound()
     {
         _tokenService.GetUserIdFromExpiredToken("token").Returns("user-123");
         _userRepository.GetByIdAsync("user-123").Returns((UserEntity?)null);
 
-        var command = new RefreshTokenCommand
-        {
-            AccessToken = "token",
-            RefreshToken = "refresh"
-        };
-
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _handler.HandleAsync(command));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _service.RefreshTokenAsync("token", "refresh"));
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowUnauthorized_WhenRefreshTokenIsExpired()
+    public async Task RefreshTokenAsync_ShouldThrowUnauthorized_WhenRefreshTokenIsExpired()
     {
         var user = new UserEntity
         {
@@ -107,17 +91,12 @@ public class RefreshTokenCommandHandlerTests
         _userRepository.GetByIdAsync("user-123").Returns(user);
         _tokenService.HashToken("refresh").Returns("stored-hash");
 
-        var command = new RefreshTokenCommand
-        {
-            AccessToken = "token",
-            RefreshToken = "refresh"
-        };
-
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _handler.HandleAsync(command));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _service.RefreshTokenAsync("token", "refresh"));
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldThrowUnauthorized_WhenRefreshTokenHashDoesNotMatch()
+    public async Task RefreshTokenAsync_ShouldThrowUnauthorized_WhenRefreshTokenHashDoesNotMatch()
     {
         var user = new UserEntity
         {
@@ -139,17 +118,12 @@ public class RefreshTokenCommandHandlerTests
         _userRepository.GetByIdAsync("user-123").Returns(user);
         _tokenService.HashToken("wrong-refresh").Returns("wrong-hash");
 
-        var command = new RefreshTokenCommand
-        {
-            AccessToken = "token",
-            RefreshToken = "wrong-refresh"
-        };
-
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _handler.HandleAsync(command));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _service.RefreshTokenAsync("token", "wrong-refresh"));
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldCallReplaceRefreshToken_WhenTokenIsValid()
+    public async Task RefreshTokenAsync_ShouldCallReplaceRefreshToken_WhenTokenIsValid()
     {
         var user = new UserEntity
         {
@@ -174,12 +148,7 @@ public class RefreshTokenCommandHandlerTests
         _tokenService.HashToken("new-refresh").Returns("new-hash");
         _tokenService.GenerateAccessToken(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>()).Returns("new-access");
 
-        var command = new RefreshTokenCommand
-        {
-            AccessToken = "access",
-            RefreshToken = "old-refresh"
-        };
-        await _handler.HandleAsync(command);
+        await _service.RefreshTokenAsync("access", "old-refresh");
 
         await _userRepository.Received(1).ReplaceRefreshTokenAsync(
             "user-456",

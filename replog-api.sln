@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D2D31961
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-domain", "replog-domain\replog-domain.csproj", "{65013B79-8310-4FC9-87ED-2F97352F7BE7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-api.tests", "replog-api.tests\replog-api.tests.csproj", "{9E8B2373-3F9B-471A-B680-5446ACA407B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +126,18 @@ Global
 		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Release|x64.Build.0 = Release|Any CPU
 		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Release|x86.ActiveCfg = Release|Any CPU
 		{65013B79-8310-4FC9-87ED-2F97352F7BE7}.Release|x86.Build.0 = Release|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Debug|x64.Build.0 = Debug|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Debug|x86.Build.0 = Debug|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Release|x64.ActiveCfg = Release|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Release|x64.Build.0 = Release|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Release|x86.ActiveCfg = Release|Any CPU
+		{9E8B2373-3F9B-471A-B680-5446ACA407B1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

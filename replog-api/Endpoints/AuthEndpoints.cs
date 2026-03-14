@@ -1,7 +1,5 @@
-using replog_application.Commands;
-using replog_application.Interfaces;
+using replog_api.Auth;
 using replog_shared.Models.Requests;
-using replog_shared.Models.Responses;
 
 namespace replog_api.Endpoints;
 
@@ -14,23 +12,17 @@ public static class AuthEndpoints
 
         group.MapPost("/login", async (
             LoginRequest request,
-            ICommandHandler<LoginCommand, AuthResponse> handler) =>
+            IAuthService authService) =>
         {
-            var command = new LoginCommand { GoogleIdToken = request.GoogleIdToken };
-            var result = await handler.HandleAsync(command);
+            var result = await authService.LoginAsync(request.GoogleIdToken);
             return Results.Ok(result);
         });
 
         group.MapPost("/refresh", async (
             RefreshTokenRequest request,
-            ICommandHandler<RefreshTokenCommand, AuthResponse> handler) =>
+            IAuthService authService) =>
         {
-            var command = new RefreshTokenCommand
-            {
-                AccessToken = request.AccessToken,
-                RefreshToken = request.RefreshToken
-            };
-            var result = await handler.HandleAsync(command);
+            var result = await authService.RefreshTokenAsync(request.AccessToken, request.RefreshToken);
             return Results.Ok(result);
         });
     }

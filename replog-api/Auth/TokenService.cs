@@ -4,10 +4,9 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using replog_application.Interfaces;
-using replog_infrastructure.Settings;
+using replog_api.Settings;
 
-namespace replog_infrastructure.Services;
+namespace replog_api.Auth;
 
 public class TokenService(IOptions<JwtSettings> settings) : ITokenService
 {

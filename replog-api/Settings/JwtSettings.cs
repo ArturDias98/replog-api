@@ -1,4 +1,4 @@
-namespace replog_infrastructure.Settings;
+namespace replog_api.Settings;
 
 public class JwtSettings
 {
