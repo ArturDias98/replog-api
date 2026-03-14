@@ -12,6 +12,12 @@ using replog_infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+if (builder.Environment.IsDevelopment())
+    builder.Logging.AddConsole();
+else
+    builder.Logging.AddJsonConsole();
+
 builder.Services.AddOpenApi();
 
 // Authentication — Custom JWT

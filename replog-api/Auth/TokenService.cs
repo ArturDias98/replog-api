@@ -2,13 +2,14 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using replog_api.Settings;
 
 namespace replog_api.Auth;
 
-public class TokenService(IOptions<JwtSettings> settings) : ITokenService
+public class TokenService(IOptions<JwtSettings> settings, ILogger<TokenService> logger) : ITokenService
 {
     private readonly JwtSettings _settings = settings.Value;
 
@@ -72,8 +73,9 @@ public class TokenService(IOptions<JwtSettings> settings) : ITokenService
 
             return principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogError("Token validation threw an unexpected exception: {Message}", ex.Message);
             return null;
         }
     }

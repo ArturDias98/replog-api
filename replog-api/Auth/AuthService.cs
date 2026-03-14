@@ -11,7 +11,8 @@ public class AuthService(
     IGoogleTokenValidator googleValidator,
     IUserRepository userRepository,
     ITokenService tokenService,
-    IOptions<JwtSettings> jwtSettings
+    IOptions<JwtSettings> jwtSettings,
+    ILogger<AuthService> logger
 ) : IAuthService
 {
     private readonly JwtSettings _jwt = jwtSettings.Value;
@@ -20,7 +21,10 @@ public class AuthService(
     {
         var googleUser = await googleValidator.ValidateAsync(googleIdToken);
         if (googleUser == null)
+        {
+            logger.LogWarning("Login failed: invalid Google ID token");
             return Result<AuthResponse>.Failure("invalid_google_token", "Invalid Google ID token.");
+        }
 
         var now = DateTime.UtcNow;
         var existingUser = await userRepository.GetByIdAsync(googleUser.Subject);
@@ -57,6 +61,11 @@ public class AuthService(
 
         var accessToken = tokenService.GenerateAccessToken(user.Id, user.Email, user.DisplayName, user.AvatarUrl);
 
+        if (existingUser == null)
+            logger.LogInformation("New user registered {UserId}", user.Id);
+        else
+            logger.LogInformation("User {UserId} logged in", user.Id);
+
         return Result<AuthResponse>.Success(new AuthResponse
         {
             AccessToken = accessToken,
@@ -69,20 +78,32 @@ public class AuthService(
     {
         var userId = tokenService.GetUserIdFromExpiredToken(accessToken);
         if (userId == null)
+        {
+            logger.LogWarning("Token refresh failed: invalid access token");
             return Result<AuthResponse>.Failure("invalid_access_token", "Invalid access token.");
+        }
 
         var user = await userRepository.GetByIdAsync(userId);
         if (user == null)
+        {
+            logger.LogWarning("Token refresh failed: user {UserId} not found", userId);
             return Result<AuthResponse>.Failure("user_not_found", "User not found.");
+        }
 
         var providedHash = tokenService.HashToken(refreshToken);
         var matchingToken = user.RefreshTokens.Find(rt => rt.TokenHash == providedHash);
 
         if (matchingToken == null)
+        {
+            logger.LogWarning("Token refresh failed: invalid refresh token for user {UserId}", userId);
             return Result<AuthResponse>.Failure("invalid_refresh_token", "Invalid refresh token.");
+        }
 
         if (matchingToken.ExpiresAt < DateTime.UtcNow)
+        {
+            logger.LogWarning("Token refresh failed: expired refresh token for user {UserId}", userId);
             return Result<AuthResponse>.Failure("token_expired", "Refresh token has expired.");
+        }
 
         var now = DateTime.UtcNow;
         var newRefreshToken = tokenService.GenerateRefreshToken();
@@ -95,6 +116,8 @@ public class AuthService(
         await userRepository.ReplaceRefreshTokenAsync(userId, providedHash, newEntry);
 
         var newAccessToken = tokenService.GenerateAccessToken(user.Id, user.Email, user.DisplayName, user.AvatarUrl);
+
+        logger.LogInformation("Token refreshed for user {UserId}", userId);
 
         return Result<AuthResponse>.Success(new AuthResponse
         {

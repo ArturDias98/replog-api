@@ -1,10 +1,14 @@
 using Google.Apis.Auth;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using replog_api.Settings;
 
 namespace replog_api.Auth;
 
-public class GoogleTokenValidator(IOptions<GoogleAuthSettings> settings) : IGoogleTokenValidator
+public class GoogleTokenValidator(
+    IOptions<GoogleAuthSettings> settings,
+    ILogger<GoogleTokenValidator> logger
+) : IGoogleTokenValidator
 {
     private readonly GoogleAuthSettings _settings = settings.Value;
 
@@ -26,8 +30,9 @@ public class GoogleTokenValidator(IOptions<GoogleAuthSettings> settings) : IGoog
                 Picture = payload.Picture
             };
         }
-        catch (InvalidJwtException)
+        catch (InvalidJwtException ex)
         {
+            logger.LogError("Google token validation threw an exception: {Message}", ex.Message);
             return null;
         }
     }

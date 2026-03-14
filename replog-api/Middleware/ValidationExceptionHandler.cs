@@ -1,9 +1,10 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using replog_shared.Models.Responses;
 
 namespace replog_api.Middleware;
 
-public class ValidationExceptionHandler(RequestDelegate next)
+public class ValidationExceptionHandler(RequestDelegate next, ILogger<ValidationExceptionHandler> logger)
 {
     public async Task InvokeAsync(HttpContext context)
     {
@@ -17,6 +18,7 @@ public class ValidationExceptionHandler(RequestDelegate next)
             context.Response.ContentType = "application/json";
 
             var errors = string.Join("; ", ex.Errors.Select(e => e.ErrorMessage));
+            logger.LogWarning("Validation failed: {Errors}", errors);
             var response = new ErrorResponse
             {
                 Error = "validation_error",

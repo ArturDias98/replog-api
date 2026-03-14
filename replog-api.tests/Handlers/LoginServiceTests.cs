@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using replog_api.Auth;
@@ -17,7 +18,7 @@ public class LoginServiceTests
     public LoginServiceTests()
     {
         var jwtSettings = Options.Create(new JwtSettings { Secret = "test-secret", AccessTokenExpirationMinutes = 15, RefreshTokenExpirationDays = 30 });
-        _service = new AuthService(_googleValidator, _userRepository, _tokenService, jwtSettings);
+        _service = new AuthService(_googleValidator, _userRepository, _tokenService, jwtSettings, NullLogger<AuthService>.Instance);
     }
 
     [Fact]
