@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using replog_api.tests.Fixtures;
@@ -14,7 +13,7 @@ namespace replog_api.tests.Endpoints;
 public class SyncEndpointTests(ApiWebApplicationFactory factory)
 {
     [Fact]
-    public async Task Pull_ShouldReturn401_WhenNoAuthorizationHeader()
+    public async Task Pull_ShouldReturn401_WhenNoCookie()
     {
         var client = factory.CreateClient();
 
@@ -24,7 +23,7 @@ public class SyncEndpointTests(ApiWebApplicationFactory factory)
     }
 
     [Fact]
-    public async Task Push_ShouldReturn401_WhenNoAuthorizationHeader()
+    public async Task Push_ShouldReturn401_WhenNoCookie()
     {
         var client = factory.CreateClient();
 
@@ -38,8 +37,7 @@ public class SyncEndpointTests(ApiWebApplicationFactory factory)
     public async Task Pull_ShouldReturn200WithEmptyWorkouts_WhenAuthorized()
     {
         var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", factory.GenerateJwt(Guid.NewGuid().ToString()));
+        factory.SetAuthCookie(client, factory.GenerateJwt(Guid.NewGuid().ToString()));
 
         var response = await client.GetAsync("/api/sync/pull");
 
@@ -54,8 +52,7 @@ public class SyncEndpointTests(ApiWebApplicationFactory factory)
     {
         var userId = Guid.NewGuid().ToString();
         var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", factory.GenerateJwt(userId));
+        factory.SetAuthCookie(client, factory.GenerateJwt(userId));
 
         var workoutData = JsonSerializer.SerializeToElement(
             new { id = Guid.NewGuid().ToString(), userId, title = "Push Day", date = "2026-03-01", orderIndex = 0 },
@@ -88,8 +85,7 @@ public class SyncEndpointTests(ApiWebApplicationFactory factory)
     public async Task Push_ShouldReturn400WithValidationError_WhenChangesListIsEmpty()
     {
         var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", factory.GenerateJwt(Guid.NewGuid().ToString()));
+        factory.SetAuthCookie(client, factory.GenerateJwt(Guid.NewGuid().ToString()));
 
         var response = await client.PostAsJsonAsync("/api/sync/push",
             new PushSyncRequest { Changes = [] });

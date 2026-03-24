@@ -45,6 +45,9 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLi
         });
     }
 
+    public void SetAuthCookie(HttpClient client, string jwt) =>
+        client.DefaultRequestHeaders.Add("Cookie", $"access_token={jwt}");
+
     public string GenerateJwt(string userId)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestJwtSecret));

@@ -12,7 +12,7 @@ namespace replog_api.tests.Endpoints;
 public class AuthEndpointTests(ApiWebApplicationFactory factory)
 {
     [Fact]
-    public async Task Login_ShouldReturn200WithTokens_WhenGoogleTokenIsValid()
+    public async Task Login_ShouldReturn200WithCookiesAndExpiresAt_WhenGoogleTokenIsValid()
     {
         factory.GoogleValidator
             .ValidateAsync(Arg.Any<string>())
@@ -29,10 +29,13 @@ public class AuthEndpointTests(ApiWebApplicationFactory factory)
             new LoginRequest { GoogleIdToken = "valid-google-token" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var cookies = response.Headers.GetValues("Set-Cookie").ToList();
+        Assert.Contains(cookies, c => c.Contains("access_token=") && c.Contains("httponly", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(cookies, c => c.Contains("refresh_token=") && c.Contains("httponly", StringComparison.OrdinalIgnoreCase));
+
         var body = await response.Content.ReadFromJsonAsync<AuthResponse>();
         Assert.NotNull(body);
-        Assert.NotEmpty(body.AccessToken);
-        Assert.NotEmpty(body.RefreshToken);
         Assert.True(body.ExpiresAt > DateTime.UtcNow);
     }
 

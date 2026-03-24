@@ -39,6 +39,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = key,
             ClockSkew = TimeSpan.FromMinutes(1)
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies.TryGetValue("access_token", out var token)
+                    ? token
+                    : null;
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization();
 
@@ -65,8 +75,9 @@ builder.Services.AddCors(options =>
             : new[] { "https://replog.adrvcode.com" };
 
         policy.WithOrigins(origins)
-            .WithHeaders("Authorization", "Content-Type")
-            .WithMethods("GET", "POST");
+            .WithHeaders("Content-Type")
+            .WithMethods("GET", "POST")
+            .AllowCredentials();
     });
 });
 
