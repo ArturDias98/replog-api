@@ -42,6 +42,10 @@ public class LoginServiceTests
         Assert.Equal("access-token", result.Value!.AccessToken);
         Assert.Equal("refresh-token", result.Value.RefreshToken);
         Assert.True(result.Value.ExpiresAt > DateTime.UtcNow);
+        Assert.Equal("google-sub-123", result.Value.UserId);
+        Assert.Equal("user@example.com", result.Value.Email);
+        Assert.Equal("Test User", result.Value.DisplayName);
+        Assert.Equal("https://example.com/avatar.png", result.Value.AvatarUrl);
 
     }
 

@@ -37,6 +37,10 @@ public class AuthEndpointTests(ApiWebApplicationFactory factory)
         var body = await response.Content.ReadFromJsonAsync<AuthResponse>();
         Assert.NotNull(body);
         Assert.True(body.ExpiresAt > DateTime.UtcNow);
+        Assert.Equal("google-sub-123", body.UserId);
+        Assert.Equal("user@example.com", body.Email);
+        Assert.Equal("Test User", body.DisplayName);
+        Assert.Equal("https://example.com/avatar.png", body.AvatarUrl);
     }
 
     [Fact]

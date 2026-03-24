@@ -28,7 +28,14 @@ public static class AuthEndpoints
             var jwt = jwtOptions.Value;
             context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(TimeSpan.FromMinutes(jwt.AccessTokenExpirationMinutes)));
             context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(TimeSpan.FromDays(jwt.RefreshTokenExpirationDays)));
-            return Results.Ok(new AuthResponse { ExpiresAt = result.Value!.ExpiresAt });
+            return Results.Ok(new AuthResponse
+            {
+                ExpiresAt = result.Value!.ExpiresAt,
+                UserId = result.Value!.UserId,
+                Email = result.Value!.Email,
+                DisplayName = result.Value!.DisplayName,
+                AvatarUrl = result.Value!.AvatarUrl
+            });
         });
 
         group.MapPost("/refresh", async (
@@ -53,7 +60,14 @@ public static class AuthEndpoints
             var jwt = jwtOptions.Value;
             context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(TimeSpan.FromMinutes(jwt.AccessTokenExpirationMinutes)));
             context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(TimeSpan.FromDays(jwt.RefreshTokenExpirationDays)));
-            return Results.Ok(new AuthResponse { ExpiresAt = result.Value!.ExpiresAt });
+            return Results.Ok(new AuthResponse
+            {
+                ExpiresAt = result.Value!.ExpiresAt,
+                UserId = result.Value!.UserId,
+                Email = result.Value!.Email,
+                DisplayName = result.Value!.DisplayName,
+                AvatarUrl = result.Value!.AvatarUrl
+            });
         });
 
         group.MapPost("/logout", (HttpContext context) =>

@@ -31,7 +31,11 @@ Exchanges a Google ID token for API tokens. No authentication required.
 
 ```json
 {
-  "expiresAt": "2026-03-10T12:30:00Z"
+  "expiresAt": "2026-03-10T12:30:00Z",
+  "userId": "google-sub-123",
+  "email": "user@example.com",
+  "displayName": "Test User",
+  "avatarUrl": "https://..."
 }
 ```
 
@@ -61,7 +65,11 @@ Rotates tokens using the cookies set by a previous login or refresh. No request 
 
 ```json
 {
-  "expiresAt": "2026-03-10T12:45:00Z"
+  "expiresAt": "2026-03-10T12:45:00Z",
+  "userId": "google-sub-123",
+  "email": "user@example.com",
+  "displayName": "Test User",
+  "avatarUrl": "https://..."
 }
 ```
 

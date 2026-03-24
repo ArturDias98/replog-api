@@ -65,7 +65,9 @@ public class AuthService(
         else
             logger.LogInformation("User {UserId} logged in", user.Id);
 
-        return Result<AuthTokens>.Success(new AuthTokens(accessToken, refreshToken, now.AddMinutes(_jwt.AccessTokenExpirationMinutes)));
+        return Result<AuthTokens>.Success(new AuthTokens(
+            accessToken, refreshToken, now.AddMinutes(_jwt.AccessTokenExpirationMinutes),
+            user.Id, user.Email, user.DisplayName, user.AvatarUrl));
     }
 
     public async Task<Result<AuthTokens>> RefreshTokenAsync(string accessToken, string refreshToken)
@@ -113,6 +115,8 @@ public class AuthService(
 
         logger.LogInformation("Token refreshed for user {UserId}", userId);
 
-        return Result<AuthTokens>.Success(new AuthTokens(newAccessToken, newRefreshToken, now.AddMinutes(_jwt.AccessTokenExpirationMinutes)));
+        return Result<AuthTokens>.Success(new AuthTokens(
+            newAccessToken, newRefreshToken, now.AddMinutes(_jwt.AccessTokenExpirationMinutes),
+            user.Id, user.Email, user.DisplayName, user.AvatarUrl));
     }
 }

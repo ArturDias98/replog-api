@@ -52,6 +52,9 @@ public class RefreshTokenServiceTests
         Assert.Equal("new-access-token", result.Value!.AccessToken);
         Assert.Equal("new-refresh-token", result.Value.RefreshToken);
         Assert.True(result.Value.ExpiresAt > DateTime.UtcNow);
+        Assert.Equal("user-123", result.Value.UserId);
+        Assert.Equal("user@example.com", result.Value.Email);
+        Assert.Equal("User", result.Value.DisplayName);
     }
 
     [Fact]
