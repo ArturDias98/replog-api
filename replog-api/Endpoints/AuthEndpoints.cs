@@ -17,8 +17,7 @@ public static class AuthEndpoints
             LoginRequest request,
             IAuthService authService,
             IOptions<JwtSettings> jwtOptions,
-            HttpContext context,
-            IWebHostEnvironment env) =>
+            HttpContext context) =>
         {
             var result = await authService.LoginAsync(request.GoogleIdToken);
             if (!result.IsSuccess)
@@ -27,16 +26,15 @@ public static class AuthEndpoints
                     statusCode: StatusCodes.Status401Unauthorized);
 
             var jwt = jwtOptions.Value;
-            context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(env, TimeSpan.FromMinutes(jwt.AccessTokenExpirationMinutes)));
-            context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(env, TimeSpan.FromDays(jwt.RefreshTokenExpirationDays)));
+            context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(TimeSpan.FromMinutes(jwt.AccessTokenExpirationMinutes)));
+            context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(TimeSpan.FromDays(jwt.RefreshTokenExpirationDays)));
             return Results.Ok(new AuthResponse { ExpiresAt = result.Value!.ExpiresAt });
         });
 
         group.MapPost("/refresh", async (
             IAuthService authService,
             IOptions<JwtSettings> jwtOptions,
-            HttpContext context,
-            IWebHostEnvironment env) =>
+            HttpContext context) =>
         {
             var accessToken = context.Request.Cookies["access_token"];
             var refreshToken = context.Request.Cookies["refresh_token"];
@@ -53,24 +51,24 @@ public static class AuthEndpoints
                     statusCode: StatusCodes.Status401Unauthorized);
 
             var jwt = jwtOptions.Value;
-            context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(env, TimeSpan.FromMinutes(jwt.AccessTokenExpirationMinutes)));
-            context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(env, TimeSpan.FromDays(jwt.RefreshTokenExpirationDays)));
+            context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(TimeSpan.FromMinutes(jwt.AccessTokenExpirationMinutes)));
+            context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(TimeSpan.FromDays(jwt.RefreshTokenExpirationDays)));
             return Results.Ok(new AuthResponse { ExpiresAt = result.Value!.ExpiresAt });
         });
 
-        group.MapPost("/logout", (HttpContext context, IWebHostEnvironment env) =>
+        group.MapPost("/logout", (HttpContext context) =>
         {
-            context.Response.Cookies.Delete("access_token", CookieOpts(env, TimeSpan.Zero));
-            context.Response.Cookies.Delete("refresh_token", CookieOpts(env, TimeSpan.Zero));
+            context.Response.Cookies.Delete("access_token", CookieOpts(TimeSpan.Zero));
+            context.Response.Cookies.Delete("refresh_token", CookieOpts(TimeSpan.Zero));
             return Results.Ok();
         });
     }
 
-    private static CookieOptions CookieOpts(IWebHostEnvironment env, TimeSpan maxAge) => new()
+    private static CookieOptions CookieOpts(TimeSpan maxAge) => new()
     {
         HttpOnly = true,
-        Secure = env.IsProduction(),
-        SameSite = SameSiteMode.Lax,
+        Secure = true,
+        SameSite = SameSiteMode.None,
         MaxAge = maxAge,
         Path = "/"
     };

@@ -72,7 +72,7 @@ builder.Services.AddCors(options =>
     {
         var origins = builder.Environment.IsDevelopment()
             ? new[] { "http://localhost:4200" }
-            : new[] { "https://replog.adrvcode.com" };
+            : new[] { "https://replog.adrvcode.com", "https://localhost" };
 
         policy.WithOrigins(origins)
             .WithHeaders("Content-Type")

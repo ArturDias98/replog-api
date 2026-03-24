@@ -39,8 +39,8 @@ Two HttpOnly cookies are set on the response:
 
 | Cookie | Lifetime | Flags |
 |--------|----------|-------|
-| `access_token` | 15 minutes | `HttpOnly`, `SameSite=Lax`, `Secure` (prod only) |
-| `refresh_token` | 30 days | `HttpOnly`, `SameSite=Lax`, `Secure` (prod only) |
+| `access_token` | 15 minutes | `HttpOnly`, `SameSite=None`, `Secure` |
+| `refresh_token` | 30 days | `HttpOnly`, `SameSite=None`, `Secure` |
 
 **Error Responses:**
 
@@ -119,7 +119,7 @@ No special headers are needed. The browser automatically includes the `access_to
 fetch('/api/sync/pull', { credentials: 'include' })
 ```
 
-For cross-origin requests (e.g. Angular app on `localhost:4200` calling the API), `credentials: 'include'` is required.
+All three client origins (`http://localhost:4200` dev, `https://replog.adrvcode.com` prod, `https://localhost` Capacitor Android) are in the CORS allowlist. `credentials: 'include'` is required on every fetch/XHR call for cookies to be sent and received.
 
 ### Handling Token Expiration
 
