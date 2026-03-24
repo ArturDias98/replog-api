@@ -11,7 +11,7 @@ API documentation lives in the `docs/` directory of this repository:
 
 Read these files directly when you need API contracts or sync behavior details.
 
-For web application context (client-side code, front-end docs), fetch from: `https://github.com/ArturDias98/replog/tree/84025ea8c54c58e04b4151182668e8182972c035/code/docs`
+For web application context (client-side code, front-end docs), fetch from: `https://github.com/ArturDias98/replog/tree/main/code/docs`
 
 ## Solution Structure
 

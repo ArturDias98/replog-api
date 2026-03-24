@@ -171,7 +171,7 @@ Receives a batch of changes from the client and applies them.
 
 > **Partial success:** The endpoint always returns 200 as long as the request passes initial validation. Each change is processed independently — changes that succeed are in `acknowledgedChangeIds`, changes that conflict are in `conflicts`, and changes that fail due to invalid data or a server error are in `failedChangeIds`. The client should retry `failedChangeIds` on the next push; idempotency guarantees make it safe to re-send the full batch.
 
-**Response (400 — validation error):**
+**Response (400 — request-level validation failure):**
 
 ```json
 {
@@ -180,7 +180,20 @@ Receives a batch of changes from the client and applies them.
 }
 ```
 
+> Returned before any changes are processed (e.g. empty `changes` array). Per-change errors are **not** an `ErrorResponse` — they appear in `failedChangeIds` within the 200 response.
+
 **Response (401 — missing or invalid token):** empty body, returned by ASP.NET auth middleware.
+
+**Response (500 — unexpected server error):**
+
+```json
+{
+  "error": "internal_error",
+  "message": "An unexpected error occurred."
+}
+```
+
+> Returned only for unhandled infrastructure failures (e.g. DI misconfiguration) caught by `GlobalExceptionHandler`. Normal per-change failures never reach this path.
 
 **Processing logic:**
 
@@ -188,7 +201,7 @@ Receives a batch of changes from the client and applies them.
 2. Validate request body schema.
 3. Process each change sequentially (ordered by `timestamp`).
 4. Apply each change to the database. Idempotency is inherent (duplicate CREATEs are skipped, UPDATEs use timestamp comparison, DELETEs check `deletedAt`).
-5. Return acknowledged IDs, conflicts, and current server timestamp.
+5. Return acknowledged IDs, failed IDs, conflicts, and current server timestamp.
 
 See [Section 4 — Entity Processing](#4-entity-processing) for details on how each entity type is handled.
 
