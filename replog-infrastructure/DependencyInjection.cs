@@ -20,13 +20,15 @@ public static class DependencyInjection
         services.AddSingleton<IAmazonDynamoDB>(sp =>
         {
             var settings = sp.GetRequiredService<IOptions<DynamoDbSettings>>().Value;
-            var credentials = new BasicAWSCredentials(settings.AccessKey, settings.SecretKey);
             var clientConfig = new AmazonDynamoDBConfig { RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(settings.Region) };
 
             if (!string.IsNullOrEmpty(settings.ServiceURL))
                 clientConfig.ServiceURL = settings.ServiceURL;
 
-            return new AmazonDynamoDBClient(credentials, clientConfig);
+            if (!string.IsNullOrEmpty(settings.AccessKey))
+                return new AmazonDynamoDBClient(new BasicAWSCredentials(settings.AccessKey, settings.SecretKey), clientConfig);
+
+            return new AmazonDynamoDBClient(clientConfig);
         });
 
         services.AddScoped<IWorkoutRepository, WorkoutRepository>();
