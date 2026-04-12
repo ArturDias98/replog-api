@@ -7,4 +7,6 @@ public class JwtSettings
     public string Audience { get; set; } = "replog-client";
     public int AccessTokenExpirationMinutes { get; set; } = 15;
     public int RefreshTokenExpirationDays { get; set; } = 30;
+    public int AccessTokenCookieExpirationDays { get; set; } = 30;
+    public int RefreshTokenCookieExpirationDays { get; set; } = 30;
 }

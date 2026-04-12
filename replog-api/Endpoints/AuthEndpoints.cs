@@ -26,8 +26,8 @@ public static class AuthEndpoints
                     statusCode: StatusCodes.Status401Unauthorized);
 
             var jwt = jwtOptions.Value;
-            context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(TimeSpan.FromMinutes(jwt.AccessTokenExpirationMinutes)));
-            context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(TimeSpan.FromDays(jwt.RefreshTokenExpirationDays)));
+            context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(TimeSpan.FromDays(jwt.AccessTokenCookieExpirationDays)));
+            context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(TimeSpan.FromDays(jwt.RefreshTokenCookieExpirationDays)));
             return Results.Ok(new AuthResponse
             {
                 ExpiresAt = result.Value!.ExpiresAt,
@@ -58,8 +58,8 @@ public static class AuthEndpoints
                     statusCode: StatusCodes.Status401Unauthorized);
 
             var jwt = jwtOptions.Value;
-            context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(TimeSpan.FromMinutes(jwt.AccessTokenExpirationMinutes)));
-            context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(TimeSpan.FromDays(jwt.RefreshTokenExpirationDays)));
+            context.Response.Cookies.Append("access_token", result.Value!.AccessToken, CookieOpts(TimeSpan.FromDays(jwt.AccessTokenCookieExpirationDays)));
+            context.Response.Cookies.Append("refresh_token", result.Value!.RefreshToken, CookieOpts(TimeSpan.FromDays(jwt.RefreshTokenCookieExpirationDays)));
             return Results.Ok(new AuthResponse
             {
                 ExpiresAt = result.Value!.ExpiresAt,
