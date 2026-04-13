@@ -1,0 +1,63 @@
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/ > /dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  dynamodb-init:
+    image: amazon/aws-cli:latest
+    depends_on:
+      dynamodb:
+        condition: service_started
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        until aws dynamodb list-tables --endpoint-url http://dynamodb:8000 > /dev/null 2>&1; do
+          sleep 1
+        done
+
+        aws dynamodb create-table \
+          --endpoint-url http://dynamodb:8000 \
+          --table-name replog-workouts \
+          --key-schema AttributeName=id,KeyType=HASH \
+          --attribute-definitions \
+            AttributeName=id,AttributeType=S \
+            AttributeName=userId,AttributeType=S \
+          --global-secondary-indexes \
+            'IndexName=UserIdIndex,KeySchema=[{AttributeName=userId,KeyType=HASH}],Projection={ProjectionType=ALL},ProvisionedThroughput={ReadCapacityUnits=5,WriteCapacityUnits=5}' \
+          --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+        || true
+
+        aws dynamodb create-table \
+          --endpoint-url http://dynamodb:8000 \
+          --table-name replog-users \
+          --key-schema AttributeName=id,KeyType=HASH \
+          --attribute-definitions \
+            AttributeName=id,AttributeType=S \
+          --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+        || true
+
+  api:
+    build:
+      context: .
+      dockerfile: replog-api/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      dynamodb-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DynamoDB__ServiceURL: http://dynamodb:8000
+      Google__ClientId: ${GOOGLE_CLIENT_ID}
