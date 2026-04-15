@@ -12,7 +12,7 @@ public class GoogleTokenValidator(
 {
     private readonly GoogleAuthSettings _settings = settings.Value;
 
-    public async Task<GoogleUserInfo?> ValidateAsync(string idToken)
+    public async Task<GoogleUserInfo?> ValidateAsync(string idToken, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -20,7 +20,7 @@ public class GoogleTokenValidator(
                 new GoogleJsonWebSignature.ValidationSettings
                 {
                     Audience = [_settings.ClientId]
-                });
+                }).WaitAsync(cancellationToken);
 
             return new GoogleUserInfo
             {

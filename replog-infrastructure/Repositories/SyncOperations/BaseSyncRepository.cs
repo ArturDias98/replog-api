@@ -29,13 +29,13 @@ public abstract class BaseSyncRepository(IAmazonDynamoDB dynamoDbClient, IOption
         return new AttributeValue { M = doc.ToAttributeMap() };
     }
 
-    protected async Task<WorkoutEntity?> GetByIdAsync(string workoutId)
+    protected async Task<WorkoutEntity?> GetByIdAsync(string workoutId, CancellationToken cancellationToken = default)
     {
         var response = await DynamoDbClient.GetItemAsync(new GetItemRequest
         {
             TableName = TableName,
             Key = WorkoutKey(workoutId)
-        });
+        }, cancellationToken);
 
         if (response.Item is null || response.Item.Count == 0)
             return null;

@@ -31,7 +31,7 @@ public class LoginServiceTests
             Name = "Test User",
             Picture = "https://example.com/avatar.png"
         };
-        _googleValidator.ValidateAsync("valid-token").Returns(googleUser);
+        _googleValidator.ValidateAsync("valid-token", Arg.Any<CancellationToken>()).Returns(googleUser);
         _tokenService.GenerateAccessToken("google-sub-123", "user@example.com", "Test User", "https://example.com/avatar.png").Returns("access-token");
         _tokenService.GenerateRefreshToken().Returns("refresh-token");
         _tokenService.HashToken("refresh-token").Returns("hashed-refresh-token");
@@ -58,8 +58,8 @@ public class LoginServiceTests
             Email = "new@example.com",
             Name = "New User"
         };
-        _googleValidator.ValidateAsync("valid-token").Returns(googleUser);
-        _userRepository.GetByIdAsync("new-user-sub").Returns((UserEntity?)null);
+        _googleValidator.ValidateAsync("valid-token", Arg.Any<CancellationToken>()).Returns(googleUser);
+        _userRepository.GetByIdAsync("new-user-sub", Arg.Any<CancellationToken>()).Returns((UserEntity?)null);
         _tokenService.GenerateAccessToken(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>()).Returns("access-token");
         _tokenService.GenerateRefreshToken().Returns("refresh-token");
         _tokenService.HashToken("refresh-token").Returns("hashed");
@@ -71,7 +71,7 @@ public class LoginServiceTests
             u.Email == "new@example.com" &&
             u.DisplayName == "New User" &&
             u.RefreshTokens.Count == 1 &&
-            u.RefreshTokens[0].TokenHash == "hashed"));
+            u.RefreshTokens[0].TokenHash == "hashed"), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -92,8 +92,8 @@ public class LoginServiceTests
             Name = "New Name",
             Picture = "https://example.com/new-avatar.png"
         };
-        _googleValidator.ValidateAsync("valid-token").Returns(googleUser);
-        _userRepository.GetByIdAsync("existing-sub").Returns(existingUser);
+        _googleValidator.ValidateAsync("valid-token", Arg.Any<CancellationToken>()).Returns(googleUser);
+        _userRepository.GetByIdAsync("existing-sub", Arg.Any<CancellationToken>()).Returns(existingUser);
         _tokenService.GenerateAccessToken(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>()).Returns("access-token");
         _tokenService.GenerateRefreshToken().Returns("refresh-token");
         _tokenService.HashToken("refresh-token").Returns("hashed");
@@ -103,13 +103,13 @@ public class LoginServiceTests
         await _userRepository.Received(1).UpsertAsync(Arg.Is<UserEntity>(u =>
             u.Email == "new@example.com" &&
             u.DisplayName == "New Name" &&
-            u.AvatarUrl == "https://example.com/new-avatar.png"));
+            u.AvatarUrl == "https://example.com/new-avatar.png"), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task LoginAsync_ShouldReturnFailure_WhenGoogleTokenIsInvalid()
     {
-        _googleValidator.ValidateAsync("invalid-token").Returns((GoogleUserInfo?)null);
+        _googleValidator.ValidateAsync("invalid-token", Arg.Any<CancellationToken>()).Returns((GoogleUserInfo?)null);
 
         var result = await _service.LoginAsync("invalid-token");
 
@@ -142,8 +142,8 @@ public class LoginServiceTests
             Email = "user@example.com",
             Name = "User"
         };
-        _googleValidator.ValidateAsync("token").Returns(googleUser);
-        _userRepository.GetByIdAsync("multi-device-sub").Returns(existingUser);
+        _googleValidator.ValidateAsync("token", Arg.Any<CancellationToken>()).Returns(googleUser);
+        _userRepository.GetByIdAsync("multi-device-sub", Arg.Any<CancellationToken>()).Returns(existingUser);
         _tokenService.GenerateRefreshToken().Returns("new-refresh");
         _tokenService.HashToken("new-refresh").Returns("new-hash");
         _tokenService.GenerateAccessToken(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>()).Returns("access");
@@ -153,7 +153,7 @@ public class LoginServiceTests
         await _userRepository.Received(1).UpsertAsync(Arg.Is<UserEntity>(u =>
             u.RefreshTokens.Count == 2 &&
             u.RefreshTokens[0].TokenHash == "device-a-hash" &&
-            u.RefreshTokens[1].TokenHash == "new-hash"));
+            u.RefreshTokens[1].TokenHash == "new-hash"), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -186,8 +186,8 @@ public class LoginServiceTests
             Email = "user@example.com",
             Name = "User"
         };
-        _googleValidator.ValidateAsync("token").Returns(googleUser);
-        _userRepository.GetByIdAsync("cleanup-sub").Returns(existingUser);
+        _googleValidator.ValidateAsync("token", Arg.Any<CancellationToken>()).Returns(googleUser);
+        _userRepository.GetByIdAsync("cleanup-sub", Arg.Any<CancellationToken>()).Returns(existingUser);
         _tokenService.GenerateRefreshToken().Returns("new-refresh");
         _tokenService.HashToken("new-refresh").Returns("new-hash");
         _tokenService.GenerateAccessToken(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>()).Returns("access");
@@ -197,6 +197,6 @@ public class LoginServiceTests
         await _userRepository.Received(1).UpsertAsync(Arg.Is<UserEntity>(u =>
             u.RefreshTokens.Count == 2 &&
             u.RefreshTokens[0].TokenHash == "valid-hash" &&
-            u.RefreshTokens[1].TokenHash == "new-hash"));
+            u.RefreshTokens[1].TokenHash == "new-hash"), Arg.Any<CancellationToken>());
     }
 }

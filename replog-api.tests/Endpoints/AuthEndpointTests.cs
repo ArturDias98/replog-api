@@ -15,7 +15,7 @@ public class AuthEndpointTests(ApiWebApplicationFactory factory)
     public async Task Login_ShouldReturn200WithCookiesAndExpiresAt_WhenGoogleTokenIsValid()
     {
         factory.GoogleValidator
-            .ValidateAsync(Arg.Any<string>())
+            .ValidateAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new GoogleUserInfo
             {
                 Subject = "google-sub-123",
@@ -47,7 +47,7 @@ public class AuthEndpointTests(ApiWebApplicationFactory factory)
     public async Task Login_ShouldReturn401_WhenGoogleTokenIsInvalid()
     {
         factory.GoogleValidator
-            .ValidateAsync(Arg.Any<string>())
+            .ValidateAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((GoogleUserInfo?)null);
 
         var client = factory.CreateClient();

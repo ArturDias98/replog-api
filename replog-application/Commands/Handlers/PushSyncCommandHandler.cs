@@ -15,9 +15,9 @@ public class PushSyncCommandHandler(
     private readonly Dictionary<EntityType, IChangeProcessor> _processors =
         changeProcessors.ToDictionary(p => p.EntityType);
 
-    public async Task<Result<PushSyncResponse>> HandleAsync(PushSyncCommand command)
+    public async Task<Result<PushSyncResponse>> HandleAsync(PushSyncCommand command, CancellationToken cancellationToken = default)
     {
-        var validation = await pushValidator.ValidateAsync(command.Request);
+        var validation = await pushValidator.ValidateAsync(command.Request, cancellationToken);
         if (!validation.IsValid)
         {
             var errors = string.Join("; ", validation.Errors.Select(e => e.ErrorMessage));
@@ -34,7 +34,7 @@ public class PushSyncCommandHandler(
             try
             {
                 if (_processors.TryGetValue(change.EntityType, out var processor))
-                    await processor.ProcessAsync(change, command.UserId, response);
+                    await processor.ProcessAsync(change, command.UserId, response, cancellationToken);
             }
             catch (Exception ex)
             {

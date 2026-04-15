@@ -9,14 +9,14 @@ public static class HealthEndpoints
 {
     public static void MapHealthEndpoints(this WebApplication app)
     {
-        app.MapGet("/api/health", async (IAmazonDynamoDB dynamoDb, IOptions<DynamoDbSettings> settings) =>
+        app.MapGet("/api/health", async (IAmazonDynamoDB dynamoDb, IOptions<DynamoDbSettings> settings, HttpContext context) =>
         {
             try
             {
                 await dynamoDb.DescribeTableAsync(new DescribeTableRequest
                 {
                     TableName = settings.Value.TableName
-                });
+                }, context.RequestAborted);
 
                 return Results.Ok(new { status = "healthy", database = "connected" });
             }

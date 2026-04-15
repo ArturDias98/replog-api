@@ -40,7 +40,7 @@ public class RefreshTokenServiceTests
             UpdatedAt = DateTime.UtcNow.AddDays(-1)
         };
         _tokenService.GetUserIdFromExpiredToken("expired-access").Returns("user-123");
-        _userRepository.GetByIdAsync("user-123").Returns(user);
+        _userRepository.GetByIdAsync("user-123", Arg.Any<CancellationToken>()).Returns(user);
         _tokenService.HashToken("valid-refresh").Returns("stored-hash");
         _tokenService.GenerateRefreshToken().Returns("new-refresh-token");
         _tokenService.HashToken("new-refresh-token").Returns("new-hash");
@@ -72,7 +72,7 @@ public class RefreshTokenServiceTests
     public async Task RefreshTokenAsync_ShouldReturnFailure_WhenUserNotFound()
     {
         _tokenService.GetUserIdFromExpiredToken("token").Returns("user-123");
-        _userRepository.GetByIdAsync("user-123").Returns((UserEntity?)null);
+        _userRepository.GetByIdAsync("user-123", Arg.Any<CancellationToken>()).Returns((UserEntity?)null);
 
         var result = await _service.RefreshTokenAsync("token", "refresh");
 
@@ -100,7 +100,7 @@ public class RefreshTokenServiceTests
             UpdatedAt = DateTime.UtcNow.AddDays(-1)
         };
         _tokenService.GetUserIdFromExpiredToken("token").Returns("user-123");
-        _userRepository.GetByIdAsync("user-123").Returns(user);
+        _userRepository.GetByIdAsync("user-123", Arg.Any<CancellationToken>()).Returns(user);
         _tokenService.HashToken("refresh").Returns("stored-hash");
 
         var result = await _service.RefreshTokenAsync("token", "refresh");
@@ -129,7 +129,7 @@ public class RefreshTokenServiceTests
             UpdatedAt = DateTime.UtcNow.AddDays(-1)
         };
         _tokenService.GetUserIdFromExpiredToken("token").Returns("user-123");
-        _userRepository.GetByIdAsync("user-123").Returns(user);
+        _userRepository.GetByIdAsync("user-123", Arg.Any<CancellationToken>()).Returns(user);
         _tokenService.HashToken("wrong-refresh").Returns("wrong-hash");
 
         var result = await _service.RefreshTokenAsync("token", "wrong-refresh");
@@ -158,7 +158,7 @@ public class RefreshTokenServiceTests
             UpdatedAt = DateTime.UtcNow.AddDays(-1)
         };
         _tokenService.GetUserIdFromExpiredToken("access").Returns("user-456");
-        _userRepository.GetByIdAsync("user-456").Returns(user);
+        _userRepository.GetByIdAsync("user-456", Arg.Any<CancellationToken>()).Returns(user);
         _tokenService.HashToken("old-refresh").Returns("old-hash");
         _tokenService.GenerateRefreshToken().Returns("new-refresh");
         _tokenService.HashToken("new-refresh").Returns("new-hash");
@@ -169,6 +169,7 @@ public class RefreshTokenServiceTests
         await _userRepository.Received(1).ReplaceRefreshTokenAsync(
             "user-456",
             "old-hash",
-            Arg.Is<RefreshTokenEntry>(e => e.TokenHash == "new-hash"));
+            Arg.Is<RefreshTokenEntry>(e => e.TokenHash == "new-hash"),
+            Arg.Any<CancellationToken>());
     }
 }

@@ -13,7 +13,7 @@ public class UserRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSet
 {
     private readonly string _tableName = settings.Value.UsersTableName;
 
-    public async Task<UserEntity?> GetByIdAsync(string userId)
+    public async Task<UserEntity?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         var response = await dynamoDbClient.GetItemAsync(new GetItemRequest
         {
@@ -22,12 +22,12 @@ public class UserRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSet
             {
                 ["id"] = new() { S = userId }
             }
-        });
+        }, cancellationToken);
 
         return response.Item is null || response.Item.Count == 0 ? null : MapToEntity(response.Item);
     }
 
-    public async Task UpsertAsync(UserEntity user)
+    public async Task UpsertAsync(UserEntity user, CancellationToken cancellationToken = default)
     {
         var json = JsonSerializer.Serialize(user, JsonDefaults.Options);
         var doc = Amazon.DynamoDBv2.DocumentModel.Document.FromJson(json);
@@ -37,10 +37,10 @@ public class UserRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSet
         {
             TableName = _tableName,
             Item = item
-        });
+        }, cancellationToken);
     }
 
-    public async Task AddRefreshTokenAsync(string userId, RefreshTokenEntry entry)
+    public async Task AddRefreshTokenAsync(string userId, RefreshTokenEntry entry, CancellationToken cancellationToken = default)
     {
         var entryMap = new AttributeValue
         {
@@ -66,12 +66,12 @@ public class UserRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSet
                 [":now"] = new() { S = DateTime.UtcNow.ToString("o") }
             },
             ConditionExpression = "attribute_exists(id)"
-        });
+        }, cancellationToken);
     }
 
-    public async Task ReplaceRefreshTokenAsync(string userId, string oldTokenHash, RefreshTokenEntry newEntry)
+    public async Task ReplaceRefreshTokenAsync(string userId, string oldTokenHash, RefreshTokenEntry newEntry, CancellationToken cancellationToken = default)
     {
-        var user = await GetByIdAsync(userId)
+        var user = await GetByIdAsync(userId, cancellationToken)
             ?? throw new InvalidOperationException("User not found.");
 
         var index = user.RefreshTokens.FindIndex(rt => rt.TokenHash == oldTokenHash);
@@ -85,7 +85,7 @@ public class UserRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSet
         user.RefreshTokens.RemoveAll(rt => rt.ExpiresAt < now && rt.TokenHash != newEntry.TokenHash);
         user.UpdatedAt = now;
 
-        await UpsertAsync(user);
+        await UpsertAsync(user, cancellationToken);
     }
 
     private static UserEntity MapToEntity(Dictionary<string, AttributeValue> item)

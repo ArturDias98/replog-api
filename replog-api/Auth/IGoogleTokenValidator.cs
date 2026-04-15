@@ -2,7 +2,7 @@ namespace replog_api.Auth;
 
 public interface IGoogleTokenValidator
 {
-    Task<GoogleUserInfo?> ValidateAsync(string idToken);
+    Task<GoogleUserInfo?> ValidateAsync(string idToken, CancellationToken cancellationToken = default);
 }
 
 public class GoogleUserInfo

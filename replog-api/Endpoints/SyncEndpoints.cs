@@ -23,7 +23,7 @@ public static class SyncEndpoints
         {
             var userId = context.User.GetUserId();
             var command = new PushSyncCommand { UserId = userId, Request = request };
-            var result = await handler.HandleAsync(command);
+            var result = await handler.HandleAsync(command, context.RequestAborted);
             if (!result.IsSuccess)
                 return Results.Json(
                     new ErrorResponse { Error = result.ErrorCode!, Message = result.ErrorMessage! },
@@ -37,7 +37,7 @@ public static class SyncEndpoints
         {
             var userId = context.User.GetUserId();
             var query = new PullSyncQuery { UserId = userId };
-            return Results.Ok(await handler.HandleAsync(query));
+            return Results.Ok(await handler.HandleAsync(query, context.RequestAborted));
         });
     }
 }

@@ -12,7 +12,7 @@ namespace replog_infrastructure.Repositories.SyncOperations;
 public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDbSettings> settings)
     : BaseSyncRepository(dynamoDbClient, settings), IWorkoutSyncRepository
 {
-    public async Task<bool> CreateWorkoutAsync(WorkoutEntity workout)
+    public async Task<bool> CreateWorkoutAsync(WorkoutEntity workout, CancellationToken cancellationToken = default)
     {
         var json = JsonSerializer.Serialize(workout, JsonDefaults.Options);
         var doc = Amazon.DynamoDBv2.DocumentModel.Document.FromJson(json);
@@ -25,7 +25,7 @@ public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyna
                 TableName = TableName,
                 Item = item,
                 ConditionExpression = "attribute_not_exists(id)"
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)
@@ -35,9 +35,9 @@ public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyna
     }
 
     public async Task<WorkoutEntity?> UpdateWorkoutAsync(
-        string userId, string workoutId, string title, string date, int orderIndex, DateTime timestamp)
+        string userId, string workoutId, string title, string date, int orderIndex, DateTime timestamp, CancellationToken cancellationToken = default)
     {
-        var current = await GetByIdAsync(workoutId);
+        var current = await GetByIdAsync(workoutId, cancellationToken);
         if (current is null || current.DeletedAt is not null)
             return null;
 
@@ -65,16 +65,16 @@ public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyna
                     [":currentTs"] = DateTimeAttr(current.UpdatedAt),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return null;
         }
         catch (ConditionalCheckFailedException)
         {
-            return await GetByIdAsync(workoutId);
+            return await GetByIdAsync(workoutId, cancellationToken);
         }
     }
 
-    public async Task<bool> SoftDeleteWorkoutAsync(string userId, string workoutId, DateTime timestamp)
+    public async Task<bool> SoftDeleteWorkoutAsync(string userId, string workoutId, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -89,7 +89,7 @@ public class WorkoutSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyna
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)

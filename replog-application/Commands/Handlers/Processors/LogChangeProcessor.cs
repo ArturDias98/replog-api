@@ -20,7 +20,8 @@ public class LogChangeProcessor(
     public async Task ProcessAsync(
         SyncChangeDto change,
         string userId,
-        PushSyncResponse response)
+        PushSyncResponse response,
+        CancellationToken cancellationToken = default)
     {
         switch (change.Action)
         {
@@ -38,7 +39,7 @@ public class LogChangeProcessor(
                 };
 
                 await logSync.AddLogAsync(
-                    data.WorkoutId, userId, data.MuscleGroupId, data.ExerciseId, newLog, change.Timestamp);
+                    data.WorkoutId, userId, data.MuscleGroupId, data.ExerciseId, newLog, change.Timestamp, cancellationToken);
                 break;
             }
 
@@ -47,7 +48,7 @@ public class LogChangeProcessor(
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
                 await logSync.UpdateLogAsync(
                     userId, data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id,
-                    data.NumberReps, data.MaxWeight, change.Timestamp);
+                    data.NumberReps, data.MaxWeight, change.Timestamp, cancellationToken);
                 break;
             }
 
@@ -55,7 +56,7 @@ public class LogChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
                 await logSync.RemoveLogAsync(
-                    userId, data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id, change.Timestamp);
+                    userId, data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id, change.Timestamp, cancellationToken);
                 break;
             }
             default:

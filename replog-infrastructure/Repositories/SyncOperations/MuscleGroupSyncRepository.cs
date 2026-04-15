@@ -11,7 +11,7 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<
     : BaseSyncRepository(dynamoDbClient, settings), IMuscleGroupSyncRepository
 {
     public async Task<bool> AddMuscleGroupAsync(
-        string userId, MuscleGroupEntity muscleGroup, DateTime timestamp)
+        string userId, MuscleGroupEntity muscleGroup, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -31,7 +31,7 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)
@@ -41,7 +41,7 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<
     }
 
     public async Task<bool> UpdateMuscleGroupAsync(
-        string userId, string workoutId, string mgId, string title, string date, int orderIndex, DateTime timestamp)
+        string userId, string workoutId, string mgId, string title, string date, int orderIndex, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -64,7 +64,7 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)
@@ -73,7 +73,7 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<
         }
     }
 
-    public async Task<bool> RemoveMuscleGroupAsync(string userId, string workoutId, string mgId, DateTime timestamp)
+    public async Task<bool> RemoveMuscleGroupAsync(string userId, string workoutId, string mgId, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -92,7 +92,7 @@ public class MuscleGroupSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)

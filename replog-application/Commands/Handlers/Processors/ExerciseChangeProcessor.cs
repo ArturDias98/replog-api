@@ -20,7 +20,8 @@ public class ExerciseChangeProcessor(
     public async Task ProcessAsync(
         SyncChangeDto change,
         string userId,
-        PushSyncResponse response)
+        PushSyncResponse response,
+        CancellationToken cancellationToken = default)
     {
         switch (change.Action)
         {
@@ -37,7 +38,7 @@ public class ExerciseChangeProcessor(
                 };
 
                 await exerciseSync.AddExerciseAsync(
-                    data.WorkoutId, userId, newExercise, change.Timestamp);
+                    data.WorkoutId, userId, newExercise, change.Timestamp, cancellationToken);
                 break;
             }
 
@@ -45,7 +46,7 @@ public class ExerciseChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
                 await exerciseSync.UpdateExerciseAsync(
-                    userId, data.WorkoutId, data.MuscleGroupId, data.Id, data.Title, data.OrderIndex, change.Timestamp);
+                    userId, data.WorkoutId, data.MuscleGroupId, data.Id, data.Title, data.OrderIndex, change.Timestamp, cancellationToken);
                 break;
             }
 
@@ -53,7 +54,7 @@ public class ExerciseChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
                 await exerciseSync.RemoveExerciseAsync(
-                    userId, data.WorkoutId, data.MuscleGroupId, data.Id, change.Timestamp);
+                    userId, data.WorkoutId, data.MuscleGroupId, data.Id, change.Timestamp, cancellationToken);
                 break;
             }
         }

@@ -14,7 +14,7 @@ public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
     private readonly string _tableName = settings.Value.TableName;
     private const string UserIdIndexName = "UserIdIndex";
 
-    public async Task<WorkoutEntity?> GetByIdAsync(string workoutId)
+    public async Task<WorkoutEntity?> GetByIdAsync(string workoutId, CancellationToken cancellationToken = default)
     {
         var response = await dynamoDbClient.GetItemAsync(new GetItemRequest
         {
@@ -23,12 +23,12 @@ public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
             {
                 ["id"] = new() { S = workoutId }
             }
-        });
+        }, cancellationToken);
 
         return response.Item is null || response.Item.Count == 0 ? null : MapToEntity(response.Item);
     }
 
-    public async Task<List<WorkoutEntity>> GetByUserIdAsync(string userId)
+    public async Task<List<WorkoutEntity>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         var results = new List<WorkoutEntity>();
         Dictionary<string, AttributeValue>? lastEvaluatedKey = null;
@@ -45,7 +45,7 @@ public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
                     [":uid"] = new() { S = userId }
                 },
                 ExclusiveStartKey = lastEvaluatedKey
-            });
+            }, cancellationToken);
 
             foreach (var item in response.Items)
             {
@@ -60,7 +60,7 @@ public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
         return results;
     }
 
-    public async Task PutAsync(WorkoutEntity workout)
+    public async Task PutAsync(WorkoutEntity workout, CancellationToken cancellationToken = default)
     {
         var json = JsonSerializer.Serialize(workout, JsonDefaults.Options);
         var doc = Amazon.DynamoDBv2.DocumentModel.Document.FromJson(json);
@@ -70,7 +70,7 @@ public class WorkoutRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
         {
             TableName = _tableName,
             Item = item
-        });
+        }, cancellationToken);
     }
 
     private static WorkoutEntity MapToEntity(Dictionary<string, AttributeValue> item)

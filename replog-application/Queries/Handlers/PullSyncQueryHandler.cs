@@ -9,9 +9,9 @@ public class PullSyncQueryHandler(
     IWorkoutRepository workoutRepository,
     ILogger<PullSyncQueryHandler> logger) : IQueryHandler<PullSyncQuery, PullSyncResponse>
 {
-    public async Task<PullSyncResponse> HandleAsync(PullSyncQuery query)
+    public async Task<PullSyncResponse> HandleAsync(PullSyncQuery query, CancellationToken cancellationToken = default)
     {
-        var workouts = await workoutRepository.GetByUserIdAsync(query.UserId);
+        var workouts = await workoutRepository.GetByUserIdAsync(query.UserId, cancellationToken);
 
         var response = new PullSyncResponse
         {

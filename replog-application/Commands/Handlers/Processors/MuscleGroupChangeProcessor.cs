@@ -20,7 +20,8 @@ public class MuscleGroupChangeProcessor(
     public async Task ProcessAsync(
         SyncChangeDto change,
         string userId,
-        PushSyncResponse response)
+        PushSyncResponse response,
+        CancellationToken cancellationToken = default)
     {
         switch (change.Action)
         {
@@ -38,7 +39,7 @@ public class MuscleGroupChangeProcessor(
                 };
 
                 await muscleGroupSync.AddMuscleGroupAsync(
-                    userId, newMuscleGroup, change.Timestamp);
+                    userId, newMuscleGroup, change.Timestamp, cancellationToken);
                 break;
             }
 
@@ -46,7 +47,7 @@ public class MuscleGroupChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
                 await muscleGroupSync.UpdateMuscleGroupAsync(
-                    userId, data.WorkoutId, data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp);
+                    userId, data.WorkoutId, data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp, cancellationToken);
                 break;
             }
 
@@ -54,7 +55,7 @@ public class MuscleGroupChangeProcessor(
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
                 await muscleGroupSync.RemoveMuscleGroupAsync(
-                    userId, data.WorkoutId, data.Id, change.Timestamp);
+                    userId, data.WorkoutId, data.Id, change.Timestamp, cancellationToken);
                 break;
             }
             default:

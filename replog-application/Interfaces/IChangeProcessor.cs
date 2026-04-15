@@ -11,5 +11,6 @@ public interface IChangeProcessor
     Task ProcessAsync(
         SyncChangeDto change,
         string userId,
-        PushSyncResponse response);
+        PushSyncResponse response,
+        CancellationToken cancellationToken = default);
 }

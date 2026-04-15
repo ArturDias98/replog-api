@@ -11,7 +11,7 @@ public class ExerciseSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyn
     : BaseSyncRepository(dynamoDbClient, settings), IExerciseSyncRepository
 {
     public async Task<bool> AddExerciseAsync(
-        string workoutId, string userId, ExerciseEntity exercise, DateTime timestamp)
+        string workoutId, string userId, ExerciseEntity exercise, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -32,7 +32,7 @@ public class ExerciseSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyn
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)
@@ -42,7 +42,7 @@ public class ExerciseSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyn
     }
 
     public async Task<bool> UpdateExerciseAsync(
-        string userId, string workoutId, string mgId, string exId, string title, int orderIndex, DateTime timestamp)
+        string userId, string workoutId, string mgId, string exId, string title, int orderIndex, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -64,7 +64,7 @@ public class ExerciseSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyn
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)
@@ -73,7 +73,7 @@ public class ExerciseSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyn
         }
     }
 
-    public async Task<bool> RemoveExerciseAsync(string userId, string workoutId, string mgId, string exId, DateTime timestamp)
+    public async Task<bool> RemoveExerciseAsync(string userId, string workoutId, string mgId, string exId, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -93,7 +93,7 @@ public class ExerciseSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<Dyn
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)

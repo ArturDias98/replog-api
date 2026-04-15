@@ -12,7 +12,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
     : BaseSyncRepository(dynamoDbClient, settings), ILogSyncRepository
 {
     public async Task<bool> AddLogAsync(
-        string workoutId, string userId, string mgId, string exId, LogEntity log, DateTime timestamp)
+        string workoutId, string userId, string mgId, string exId, LogEntity log, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -35,7 +35,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)
@@ -46,7 +46,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
 
     public async Task<bool> UpdateLogAsync(
         string userId, string workoutId, string mgId, string exId, string logId,
-        int numberReps, double maxWeight, DateTime timestamp)
+        int numberReps, double maxWeight, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -70,7 +70,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)
@@ -80,7 +80,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
     }
 
     public async Task<bool> RemoveLogAsync(
-        string userId, string workoutId, string mgId, string exId, string logId, DateTime timestamp)
+        string userId, string workoutId, string mgId, string exId, string logId, DateTime timestamp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -102,7 +102,7 @@ public class LogSyncRepository(IAmazonDynamoDB dynamoDbClient, IOptions<DynamoDb
                     [":ts"] = DateTimeAttr(timestamp),
                     [":uid"] = new() { S = userId }
                 }
-            });
+            }, cancellationToken);
             return true;
         }
         catch (ConditionalCheckFailedException)

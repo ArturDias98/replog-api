@@ -21,7 +21,8 @@ public class WorkoutChangeProcessor(
     public async Task ProcessAsync(
         SyncChangeDto change,
         string userId,
-        PushSyncResponse response)
+        PushSyncResponse response,
+        CancellationToken cancellationToken = default)
     {
         switch (change.Action)
         {
@@ -40,7 +41,7 @@ public class WorkoutChangeProcessor(
                     UpdatedAt = change.Timestamp
                 };
 
-                await workoutSync.CreateWorkoutAsync(newWorkout);
+                await workoutSync.CreateWorkoutAsync(newWorkout, cancellationToken);
                 break;
             }
 
@@ -49,7 +50,7 @@ public class WorkoutChangeProcessor(
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
 
                 var conflictWorkout = await workoutSync.UpdateWorkoutAsync(
-                    userId, data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp);
+                    userId, data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp, cancellationToken);
 
                 if (conflictWorkout is not null)
                 {
@@ -67,7 +68,7 @@ public class WorkoutChangeProcessor(
             case ChangeAction.Delete:
             {
                 var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
-                await workoutSync.SoftDeleteWorkoutAsync(userId, data.Id, change.Timestamp);
+                await workoutSync.SoftDeleteWorkoutAsync(userId, data.Id, change.Timestamp, cancellationToken);
                 break;
             }
             default:

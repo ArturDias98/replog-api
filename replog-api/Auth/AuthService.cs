@@ -16,9 +16,9 @@ public class AuthService(
 {
     private readonly JwtSettings _jwt = jwtSettings.Value;
 
-    public async Task<Result<AuthTokens>> LoginAsync(string googleIdToken)
+    public async Task<Result<AuthTokens>> LoginAsync(string googleIdToken, CancellationToken cancellationToken = default)
     {
-        var googleUser = await googleValidator.ValidateAsync(googleIdToken);
+        var googleUser = await googleValidator.ValidateAsync(googleIdToken, cancellationToken);
         if (googleUser == null)
         {
             logger.LogWarning("Login failed: invalid Google ID token");
@@ -26,7 +26,7 @@ public class AuthService(
         }
 
         var now = DateTime.UtcNow;
-        var existingUser = await userRepository.GetByIdAsync(googleUser.Subject);
+        var existingUser = await userRepository.GetByIdAsync(googleUser.Subject, cancellationToken);
 
         var user = existingUser ?? new UserEntity
         {
@@ -56,7 +56,7 @@ public class AuthService(
         };
         user.RefreshTokens.Add(tokenEntry);
 
-        await userRepository.UpsertAsync(user);
+        await userRepository.UpsertAsync(user, cancellationToken);
 
         var accessToken = tokenService.GenerateAccessToken(user.Id, user.Email, user.DisplayName, user.AvatarUrl);
 
@@ -70,7 +70,7 @@ public class AuthService(
             user.Id, user.Email, user.DisplayName, user.AvatarUrl));
     }
 
-    public async Task<Result<AuthTokens>> RefreshTokenAsync(string accessToken, string refreshToken)
+    public async Task<Result<AuthTokens>> RefreshTokenAsync(string accessToken, string refreshToken, CancellationToken cancellationToken = default)
     {
         var userId = tokenService.GetUserIdFromExpiredToken(accessToken);
         if (userId == null)
@@ -79,7 +79,7 @@ public class AuthService(
             return Result<AuthTokens>.Failure("invalid_access_token", "Invalid access token.");
         }
 
-        var user = await userRepository.GetByIdAsync(userId);
+        var user = await userRepository.GetByIdAsync(userId, cancellationToken);
         if (user == null)
         {
             logger.LogWarning("Token refresh failed: user {UserId} not found", userId);
@@ -109,7 +109,7 @@ public class AuthService(
             ExpiresAt = now.AddDays(_jwt.RefreshTokenExpirationDays)
         };
 
-        await userRepository.ReplaceRefreshTokenAsync(userId, providedHash, newEntry);
+        await userRepository.ReplaceRefreshTokenAsync(userId, providedHash, newEntry, cancellationToken);
 
         var newAccessToken = tokenService.GenerateAccessToken(user.Id, user.Email, user.DisplayName, user.AvatarUrl);
 

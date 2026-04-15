@@ -19,7 +19,7 @@ public static class AuthEndpoints
             IOptions<JwtSettings> jwtOptions,
             HttpContext context) =>
         {
-            var result = await authService.LoginAsync(request.GoogleIdToken);
+            var result = await authService.LoginAsync(request.GoogleIdToken, context.RequestAborted);
             if (!result.IsSuccess)
                 return Results.Json(
                     new ErrorResponse { Error = result.ErrorCode!, Message = result.ErrorMessage! },
@@ -51,7 +51,7 @@ public static class AuthEndpoints
                     new ErrorResponse { Error = "missing_tokens", Message = "Auth cookies are missing." },
                     statusCode: StatusCodes.Status401Unauthorized);
 
-            var result = await authService.RefreshTokenAsync(accessToken, refreshToken);
+            var result = await authService.RefreshTokenAsync(accessToken, refreshToken, context.RequestAborted);
             if (!result.IsSuccess)
                 return Results.Json(
                     new ErrorResponse { Error = result.ErrorCode!, Message = result.ErrorMessage! },
