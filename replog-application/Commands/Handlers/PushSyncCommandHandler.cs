@@ -33,6 +33,12 @@ public class PushSyncCommandHandler(
         {
             try
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    logger.LogWarning("Operation was cancelled");
+                    break;
+                }
+
                 if (_processors.TryGetValue(change.EntityType, out var processor))
                     await processor.ProcessAsync(change, command.UserId, response, cancellationToken);
             }
