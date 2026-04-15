@@ -26,39 +26,39 @@ public class LogChangeProcessor(
         switch (change.Action)
         {
             case ChangeAction.Create:
-            {
-                var data = ChangeDataHelper.DeserializeAndValidate(change.Data, addValidator);
-
-                var newLog = new LogEntity
                 {
-                    Id = data.Id,
-                    NumberReps = data.NumberReps,
-                    MaxWeight = data.MaxWeight,
-                    Date = data.Date,
-                    OrderIndex = data.OrderIndex
-                };
+                    var data = ChangeDataHelper.DeserializeAndValidate(change.Data, addValidator);
 
-                await logSync.AddLogAsync(
-                    data.WorkoutId, userId, data.MuscleGroupId, data.ExerciseId, newLog, change.Timestamp, cancellationToken);
-                break;
-            }
+                    var newLog = new LogEntity
+                    {
+                        Id = data.Id,
+                        NumberReps = data.NumberReps,
+                        MaxWeight = data.MaxWeight,
+                        Date = data.Date,
+                        OrderIndex = data.OrderIndex
+                    };
+
+                    await logSync.AddLogAsync(
+                        data.WorkoutId, userId, data.MuscleGroupId, data.ExerciseId, newLog, change.Timestamp, cancellationToken);
+                    break;
+                }
 
             case ChangeAction.Update:
-            {
-                var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
-                await logSync.UpdateLogAsync(
-                    userId, data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id,
-                    data.NumberReps, data.MaxWeight, change.Timestamp, cancellationToken);
-                break;
-            }
+                {
+                    var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
+                    await logSync.UpdateLogAsync(
+                        userId, data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id,
+                        data.NumberReps, data.MaxWeight, change.Timestamp, cancellationToken);
+                    break;
+                }
 
             case ChangeAction.Delete:
-            {
-                var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
-                await logSync.RemoveLogAsync(
-                    userId, data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id, change.Timestamp, cancellationToken);
-                break;
-            }
+                {
+                    var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
+                    await logSync.RemoveLogAsync(
+                        userId, data.WorkoutId, data.MuscleGroupId, data.ExerciseId, data.Id, change.Timestamp, cancellationToken);
+                    break;
+                }
             default:
                 throw new Exception("Invalid operation");
         }

@@ -26,37 +26,37 @@ public class ExerciseChangeProcessor(
         switch (change.Action)
         {
             case ChangeAction.Create:
-            {
-                var data = ChangeDataHelper.DeserializeAndValidate(change.Data, addValidator);
-
-                var newExercise = new ExerciseEntity
                 {
-                    Id = data.Id,
-                    MuscleGroupId = data.MuscleGroupId,
-                    Title = data.Title,
-                    OrderIndex = data.OrderIndex
-                };
+                    var data = ChangeDataHelper.DeserializeAndValidate(change.Data, addValidator);
 
-                await exerciseSync.AddExerciseAsync(
-                    data.WorkoutId, userId, newExercise, change.Timestamp, cancellationToken);
-                break;
-            }
+                    var newExercise = new ExerciseEntity
+                    {
+                        Id = data.Id,
+                        MuscleGroupId = data.MuscleGroupId,
+                        Title = data.Title,
+                        OrderIndex = data.OrderIndex
+                    };
+
+                    await exerciseSync.AddExerciseAsync(
+                        data.WorkoutId, userId, newExercise, change.Timestamp, cancellationToken);
+                    break;
+                }
 
             case ChangeAction.Update:
-            {
-                var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
-                await exerciseSync.UpdateExerciseAsync(
-                    userId, data.WorkoutId, data.MuscleGroupId, data.Id, data.Title, data.OrderIndex, change.Timestamp, cancellationToken);
-                break;
-            }
+                {
+                    var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
+                    await exerciseSync.UpdateExerciseAsync(
+                        userId, data.WorkoutId, data.MuscleGroupId, data.Id, data.Title, data.OrderIndex, change.Timestamp, cancellationToken);
+                    break;
+                }
 
             case ChangeAction.Delete:
-            {
-                var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
-                await exerciseSync.RemoveExerciseAsync(
-                    userId, data.WorkoutId, data.MuscleGroupId, data.Id, change.Timestamp, cancellationToken);
-                break;
-            }
+                {
+                    var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
+                    await exerciseSync.RemoveExerciseAsync(
+                        userId, data.WorkoutId, data.MuscleGroupId, data.Id, change.Timestamp, cancellationToken);
+                    break;
+                }
         }
 
         response.AcknowledgedChangeIds.Add(change.Id);

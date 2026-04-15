@@ -26,38 +26,38 @@ public class MuscleGroupChangeProcessor(
         switch (change.Action)
         {
             case ChangeAction.Create:
-            {
-                var data = ChangeDataHelper.DeserializeAndValidate(change.Data, addValidator);
-
-                var newMuscleGroup = new MuscleGroupEntity
                 {
-                    Id = data.Id,
-                    WorkoutId = data.WorkoutId,
-                    Title = data.Title,
-                    Date = data.Date,
-                    OrderIndex = data.OrderIndex
-                };
+                    var data = ChangeDataHelper.DeserializeAndValidate(change.Data, addValidator);
 
-                await muscleGroupSync.AddMuscleGroupAsync(
-                    userId, newMuscleGroup, change.Timestamp, cancellationToken);
-                break;
-            }
+                    var newMuscleGroup = new MuscleGroupEntity
+                    {
+                        Id = data.Id,
+                        WorkoutId = data.WorkoutId,
+                        Title = data.Title,
+                        Date = data.Date,
+                        OrderIndex = data.OrderIndex
+                    };
+
+                    await muscleGroupSync.AddMuscleGroupAsync(
+                        userId, newMuscleGroup, change.Timestamp, cancellationToken);
+                    break;
+                }
 
             case ChangeAction.Update:
-            {
-                var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
-                await muscleGroupSync.UpdateMuscleGroupAsync(
-                    userId, data.WorkoutId, data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp, cancellationToken);
-                break;
-            }
+                {
+                    var data = ChangeDataHelper.DeserializeAndValidate(change.Data, updateValidator);
+                    await muscleGroupSync.UpdateMuscleGroupAsync(
+                        userId, data.WorkoutId, data.Id, data.Title, data.Date, data.OrderIndex, change.Timestamp, cancellationToken);
+                    break;
+                }
 
             case ChangeAction.Delete:
-            {
-                var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
-                await muscleGroupSync.RemoveMuscleGroupAsync(
-                    userId, data.WorkoutId, data.Id, change.Timestamp, cancellationToken);
-                break;
-            }
+                {
+                    var data = ChangeDataHelper.DeserializeAndValidate(change.Data, deleteValidator);
+                    await muscleGroupSync.RemoveMuscleGroupAsync(
+                        userId, data.WorkoutId, data.Id, change.Timestamp, cancellationToken);
+                    break;
+                }
             default:
                 throw new Exception("Invalid operation");
         }
