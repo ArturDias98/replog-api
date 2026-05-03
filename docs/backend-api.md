@@ -13,6 +13,8 @@ Backend specification for the RepLog sync system. This API receives change event
 7. [Security](#7-security)
 
 > **Auth endpoints** (`POST /api/auth/login`, `POST /api/auth/refresh`) are documented separately in [`docs/authentication.md`](authentication.md).
+>
+> **Deployment**: the API runs as a single AWS Lambda function (`dotnet8` runtime) behind API Gateway HTTP API (v2). All endpoints, middleware, auth, and rate limiting documented below apply identically — `Amazon.Lambda.AspNetCoreServer.Hosting` adapts the ASP.NET pipeline to API Gateway events. See [`docs/lambda-deployment.md`](lambda-deployment.md).
 
 ---
 

@@ -4,6 +4,8 @@
 
 Replog API uses a custom JWT-based authentication system. Users authenticate via Google OAuth on the client side, then exchange their Google ID token for API-issued access and refresh tokens. Tokens are delivered as HttpOnly cookies — they are never exposed in the response body and cannot be accessed by JavaScript.
 
+> When deployed to AWS Lambda behind API Gateway HTTP API (v2), `Set-Cookie` response headers are automatically translated into the API Gateway `cookies[]` array; the browser receives standard `Set-Cookie` headers and the auth flow below is unchanged.
+
 ## Auth Flow
 
 1. Client authenticates with Google (OAuth 2.0) and receives a Google ID token
