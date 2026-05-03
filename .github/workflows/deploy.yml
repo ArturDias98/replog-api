@@ -11,10 +11,8 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: replog-api
-  ECS_CLUSTER: replog-cluster
-  ECS_SERVICE: replog-api
-  CONTAINER_NAME: replog-api
+  LAMBDA_FUNCTION_NAME: replog-api
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
   test:
@@ -27,7 +25,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Run tests
         run: dotnet test --configuration Release --logger "console;verbosity=normal"
@@ -41,46 +39,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install Amazon.Lambda.Tools
+        run: dotnet tool install -g Amazon.Lambda.Tools
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push image to ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Package Lambda deployment artifact
         run: |
-          IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker build -f replog-api/Dockerfile -t $IMAGE_URI .
-          docker push $IMAGE_URI
-          echo "image=$IMAGE_URI" >> $GITHUB_OUTPUT
+          dotnet lambda package \
+            --project-location replog-api \
+            --configuration Release \
+            --output-package ${{ github.workspace }}/replog-api.zip
 
-      - name: Download current task definition
+      - name: Update Lambda configuration
         run: |
-          aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_SERVICE }} \
-            --query taskDefinition \
-            > task-definition.json
+          aws lambda update-function-configuration \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --runtime dotnet8 \
+            --handler replog-api \
+            --memory-size 1024 \
+            --timeout 30
+          aws lambda wait function-updated \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }}
 
-      - name: Update image in task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
+      - name: Deploy Lambda code
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --zip-file fileb://${{ github.workspace }}/replog-api.zip
+          aws lambda wait function-updated \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }}
 
-      - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+      - name: Publish Lambda version
+        run: |
+          aws lambda publish-version \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --description "Deployed from ${{ github.sha }}"
