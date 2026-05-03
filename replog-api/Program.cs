@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
+using Amazon.Lambda.AspNetCoreServer.Hosting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using replog_api.Auth;
@@ -18,7 +19,7 @@ if (builder.Environment.IsDevelopment())
 else
     builder.Logging.AddJsonConsole();
 
-builder.Services.AddOpenApi();
+await SecretsLoader.LoadFromSecretsManagerAsync(builder);
 
 // Authentication — Custom JWT
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -90,12 +91,11 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-var app = builder.Build();
+// When running inside AWS Lambda, this wires the ASP.NET Core pipeline to
+// API Gateway HTTP API (v2) events. Outside Lambda it is a no-op and Kestrel runs.
+builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionHandler>();
 app.UseHttpsRedirection();

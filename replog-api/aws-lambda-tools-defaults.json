@@ -1,0 +1,16 @@
+{
+  "Information": [
+    "This file provides default values for the deployment wizard inside Visual Studio and the AWS Lambda commands added to the .NET Core CLI.",
+    "Run 'dotnet lambda help' for available commands.",
+    "Run 'dotnet lambda package -c Release -o bin/Release/replog-api.zip' to produce a deployment artifact for the infra repo to consume.",
+    "When using AddAWSLambdaHosting (Amazon.Lambda.AspNetCoreServer.Hosting), the function handler is the assembly name only."
+  ],
+  "profile": "default",
+  "region": "us-east-1",
+  "configuration": "Release",
+  "function-runtime": "dotnet8",
+  "function-architecture": "x86_64",
+  "function-memory-size": 1024,
+  "function-timeout": 30,
+  "function-handler": "replog-api"
+}

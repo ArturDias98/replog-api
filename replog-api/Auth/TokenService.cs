@@ -50,7 +50,7 @@ public class TokenService(IOptions<JwtSettings> settings, ILogger<TokenService> 
     public string HashToken(string token)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-        return Convert.ToHexStringLower(bytes);
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
     public string? GetUserIdFromExpiredToken(string token)
