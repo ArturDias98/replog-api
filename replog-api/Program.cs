@@ -110,4 +110,7 @@ app.MapHealthEndpoints();
 
 app.Run();
 
-public partial class Program {}
+namespace replog_api
+{
+    public partial class Program {}
+}

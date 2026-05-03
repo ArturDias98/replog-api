@@ -23,6 +23,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-domain", "replog-dom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-api.tests", "replog-api.tests\replog-api.tests.csproj", "{9E8B2373-3F9B-471A-B680-5446ACA407B1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sync", "sync", "{168DC0CE-AE53-4A1C-BD56-BA1E7CF38AF3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pull", "pull", "{9A3F807F-F980-4B96-89EE-CCDD562B4C20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

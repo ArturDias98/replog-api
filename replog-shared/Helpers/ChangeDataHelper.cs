@@ -2,7 +2,7 @@ using System.Text.Json;
 using FluentValidation;
 using replog_shared.Json;
 
-namespace replog_application.Commands.Handlers.Processors;
+namespace replog_shared.Helpers;
 
 public static class ChangeDataHelper
 {

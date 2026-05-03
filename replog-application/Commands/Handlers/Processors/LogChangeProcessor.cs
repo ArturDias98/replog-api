@@ -3,6 +3,7 @@ using replog_application.Interfaces;
 using replog_application.Interfaces.SyncOperations;
 using replog_shared.Enums;
 using replog_domain.Entities;
+using replog_shared.Helpers;
 using replog_shared.Models.Requests;
 using replog_shared.Models.Responses;
 using replog_shared.Models.Sync.LogSync;
