@@ -73,7 +73,7 @@ builder.Services.AddCors(options =>
     {
         var origins = builder.Environment.IsDevelopment()
             ? new[] { "http://localhost:4200" }
-            : new[] { "https://replog.adrvcode.com", "https://localhost" };
+            : new[] { "https://replog.adrvcode.com", "https://api.replog.adrvcode.com", "https://localhost" };
 
         policy.WithOrigins(origins)
             .WithHeaders("Content-Type")
@@ -112,5 +112,5 @@ app.Run();
 
 namespace replog_api
 {
-    public partial class Program {}
+    public partial class Program { }
 }
