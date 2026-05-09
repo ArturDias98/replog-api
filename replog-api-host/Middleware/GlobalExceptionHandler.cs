@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using replog_shared.Models.Responses;
 
-namespace replog_api.Middleware;
+namespace replog_api_host.Middleware;
 
 public class GlobalExceptionHandler(RequestDelegate next, ILogger<GlobalExceptionHandler> logger)
 {

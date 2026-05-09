@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Options;
-using replog_api.Auth;
-using replog_api.Settings;
+using replog_api_auth.Auth;
+using replog_api_host.Settings;
 using replog_shared.Models.Requests;
 using replog_shared.Models.Responses;
 
-namespace replog_api.Endpoints;
+namespace replog_api_auth.Endpoints;
 
 public static class AuthEndpoints
 {

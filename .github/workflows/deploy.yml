@@ -11,7 +11,6 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  LAMBDA_FUNCTION_NAME: replog-api
   DOTNET_VERSION: '8.0.x'
 
 jobs:
@@ -31,9 +30,16 @@ jobs:
         run: dotnet test --configuration Release --logger "console;verbosity=normal"
 
   deploy:
-    name: Build and Deploy
+    name: Build and Deploy ${{ matrix.function.name }}
     runs-on: ubuntu-latest
     needs: test
+
+    strategy:
+      fail-fast: false
+      matrix:
+        function:
+          - { project: replog-api,      name: replog-api }
+          - { project: replog-api-auth, name: replog-api-auth }
 
     steps:
       - name: Checkout
@@ -56,31 +62,31 @@ jobs:
       - name: Package Lambda deployment artifact
         run: |
           dotnet lambda package \
-            --project-location replog-api \
+            --project-location ${{ matrix.function.project }} \
             --configuration Release \
-            --output-package ${{ github.workspace }}/replog-api.zip
+            --output-package ${{ github.workspace }}/${{ matrix.function.project }}.zip
 
       - name: Update Lambda configuration
         run: |
           aws lambda update-function-configuration \
-            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --function-name ${{ matrix.function.name }} \
             --runtime dotnet8 \
-            --handler replog-api \
+            --handler ${{ matrix.function.project }} \
             --memory-size 1024 \
             --timeout 30
           aws lambda wait function-updated \
-            --function-name ${{ env.LAMBDA_FUNCTION_NAME }}
+            --function-name ${{ matrix.function.name }}
 
       - name: Deploy Lambda code
         run: |
           aws lambda update-function-code \
-            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
-            --zip-file fileb://${{ github.workspace }}/replog-api.zip
+            --function-name ${{ matrix.function.name }} \
+            --zip-file fileb://${{ github.workspace }}/${{ matrix.function.project }}.zip
           aws lambda wait function-updated \
-            --function-name ${{ env.LAMBDA_FUNCTION_NAME }}
+            --function-name ${{ matrix.function.name }}
 
       - name: Publish Lambda version
         run: |
           aws lambda publish-version \
-            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --function-name ${{ matrix.function.name }} \
             --description "Deployed from ${{ github.sha }}"

@@ -1,4 +1,4 @@
-namespace replog_api.Auth;
+namespace replog_api_auth.Auth;
 
 public record AuthTokens(
     string AccessToken,

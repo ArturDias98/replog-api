@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using replog_api.Auth;
-using replog_api.Settings;
+using replog_api_auth.Auth;
+using replog_api_host.Settings;
 using replog_application.Interfaces;
 using replog_domain.Entities;
 
-namespace replog_api.tests.Handlers;
+namespace replog_api_auth.tests.Handlers;
 
 public class LoginServiceTests
 {

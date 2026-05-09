@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Options;
-using replog_api.Settings;
+using replog_api_host.Settings;
 using replog_application;
 using replog_application.Interfaces;
 using replog_domain.Entities;
 
-namespace replog_api.Auth;
+namespace replog_api_auth.Auth;
 
 public class AuthService(
     IGoogleTokenValidator googleValidator,

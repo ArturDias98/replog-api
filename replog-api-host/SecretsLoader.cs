@@ -1,7 +1,7 @@
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 
-namespace replog_api.Auth;
+namespace replog_api_host;
 
 public static class SecretsLoader
 {
@@ -14,18 +14,20 @@ public static class SecretsLoader
 
         var jwtSecretArn = Environment.GetEnvironmentVariable("JWT_SECRET_ARN")
             ?? throw new InvalidOperationException("JWT_SECRET_ARN env var is required in Production.");
-        var googleClientIdArn = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID_ARN")
-            ?? throw new InvalidOperationException("GOOGLE_CLIENT_ID_ARN env var is required in Production.");
 
         using var client = new AmazonSecretsManagerClient();
         var jwtSecret = await GetSecretStringAsync(client, jwtSecretArn, cancellationToken);
-        var googleClientId = await GetSecretStringAsync(client, googleClientIdArn, cancellationToken);
 
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        var settings = new Dictionary<string, string?> { ["Jwt:Secret"] = jwtSecret };
+
+        var googleClientIdArn = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID_ARN");
+        if (!string.IsNullOrEmpty(googleClientIdArn))
         {
-            ["Jwt:Secret"] = jwtSecret,
-            ["Google:ClientId"] = googleClientId
-        });
+            var googleClientId = await GetSecretStringAsync(client, googleClientIdArn, cancellationToken);
+            settings["Google:ClientId"] = googleClientId;
+        }
+
+        builder.Configuration.AddInMemoryCollection(settings);
     }
 
     private static async Task<string> GetSecretStringAsync(

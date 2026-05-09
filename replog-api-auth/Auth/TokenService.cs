@@ -5,9 +5,9 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using replog_api.Settings;
+using replog_api_host.Settings;
 
-namespace replog_api.Auth;
+namespace replog_api_auth.Auth;
 
 public class TokenService(IOptions<JwtSettings> settings, ILogger<TokenService> logger) : ITokenService
 {

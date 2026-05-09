@@ -1,15 +1,15 @@
 using System.Net;
 using System.Net.Http.Json;
 using NSubstitute;
-using replog_api.Auth;
-using replog_api.tests.Fixtures;
+using replog_api_auth.Auth;
+using replog_api_auth.tests.Fixtures;
 using replog_shared.Models.Requests;
 using replog_shared.Models.Responses;
 
-namespace replog_api.tests.Endpoints;
+namespace replog_api_auth.tests.Endpoints;
 
-[Collection("Api")]
-public class AuthEndpointTests(ApiWebApplicationFactory factory)
+[Collection("AuthApi")]
+public class AuthEndpointTests(AuthApiWebApplicationFactory factory)
 {
     [Fact]
     public async Task Login_ShouldReturn200WithCookiesAndExpiresAt_WhenGoogleTokenIsValid()

@@ -1,4 +1,4 @@
-using replog_api.Auth;
+using replog_api_host.Auth;
 using replog_application;
 using replog_application.Commands;
 using replog_application.Interfaces;

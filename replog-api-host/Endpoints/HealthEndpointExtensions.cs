@@ -1,15 +1,18 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 using replog_infrastructure.Settings;
 
-namespace replog_api.Endpoints;
+namespace replog_api_host.Endpoints;
 
-public static class HealthEndpoints
+public static class HealthEndpointExtensions
 {
-    public static void MapHealthEndpoints(this WebApplication app)
+    public static IEndpointRouteBuilder MapHealthEndpoint(this IEndpointRouteBuilder endpoints, string path)
     {
-        app.MapGet("/api/health", async (IAmazonDynamoDB dynamoDb, IOptions<DynamoDbSettings> settings, HttpContext context) =>
+        endpoints.MapGet(path, async (IAmazonDynamoDB dynamoDb, IOptions<DynamoDbSettings> settings, HttpContext context) =>
         {
             try
             {
@@ -27,5 +30,7 @@ public static class HealthEndpoints
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
         }).AllowAnonymous();
+
+        return endpoints;
     }
 }

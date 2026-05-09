@@ -1,11 +1,10 @@
-using System.Security.Claims;
-using System.Threading.RateLimiting;
 using Amazon.Lambda.AspNetCoreServer.Hosting;
-using replog_api.Endpoints;
+using replog_api_auth.Auth;
+using replog_api_auth.Endpoints;
+using replog_api_auth.Settings;
 using replog_api_host;
 using replog_api_host.Endpoints;
 using replog_api_host.Middleware;
-using replog_application;
 using replog_infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,23 +20,13 @@ await SecretsLoader.LoadFromSecretsManagerAsync(builder);
 builder.Services.AddReplogJwtBearer(builder.Configuration);
 builder.Services.AddAuthorization();
 
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddPolicy("sync", context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = int.Parse(builder.Configuration["RateLimiter:PermitLimit"] ?? "10"),
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0
-            }));
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-});
-
 builder.Services.AddReplogCors(builder.Environment);
 
-builder.Services.AddApplication();
+builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection("Google"));
+builder.Services.AddSingleton<IGoogleTokenValidator, GoogleTokenValidator>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
@@ -49,14 +38,13 @@ app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRateLimiter();
 
-app.MapSyncEndpoints();
-app.MapHealthEndpoint("/api/sync/health");
+app.MapAuthEndpoints();
+app.MapHealthEndpoint("/api/auth/health");
 
 app.Run();
 
-namespace replog_api
+namespace replog_api_auth
 {
     public partial class Program { }
 }

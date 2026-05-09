@@ -1,18 +1,18 @@
 using System.Net;
 using System.Text.Json;
-using replog_api.tests.Fixtures;
+using replog_api_auth.tests.Fixtures;
 
-namespace replog_api.tests.Endpoints;
+namespace replog_api_auth.tests.Endpoints;
 
-[Collection("Api")]
-public class HealthEndpointTests(ApiWebApplicationFactory factory)
+[Collection("AuthApi")]
+public class HealthEndpointTests(AuthApiWebApplicationFactory factory)
 {
     [Fact]
     public async Task Health_ShouldReturn200WithHealthyStatus_WhenDynamoDbIsAvailable()
     {
         var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/api/sync/health");
+        var response = await client.GetAsync("/api/auth/health");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var json = await response.Content.ReadAsStringAsync();

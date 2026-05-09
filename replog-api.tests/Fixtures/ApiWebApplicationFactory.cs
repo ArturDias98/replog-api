@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using NSubstitute;
-using replog_api.Auth;
 using replog_tests_shared.Fixtures;
 
 namespace replog_api.tests.Fixtures;
@@ -18,8 +16,6 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLi
     private const string TestJwtSecret = "CHANGE_THIS_TO_A_SECURE_KEY_AT_LEAST_32_CHARACTERS_LONG";
 
     private readonly DynamoDbFixture _dynamoDb = new();
-
-    public IGoogleTokenValidator GoogleValidator { get; } = Substitute.For<IGoogleTokenValidator>();
 
     public async Task InitializeAsync() => await _dynamoDb.InitializeAsync();
 
@@ -38,10 +34,6 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLi
             var dynamo = services.SingleOrDefault(d => d.ServiceType == typeof(IAmazonDynamoDB));
             if (dynamo != null) services.Remove(dynamo);
             services.AddSingleton<IAmazonDynamoDB>(_dynamoDb.Client);
-
-            var gv = services.SingleOrDefault(d => d.ServiceType == typeof(IGoogleTokenValidator));
-            if (gv != null) services.Remove(gv);
-            services.AddSingleton(GoogleValidator);
         });
     }
 

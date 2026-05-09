@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace replog_api.Auth;
+namespace replog_api_host.Auth;
 
 public static class UserClaimsExtensions
 {

@@ -1,9 +1,9 @@
 using Google.Apis.Auth;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using replog_api.Settings;
+using replog_api_auth.Settings;
 
-namespace replog_api.Auth;
+namespace replog_api_auth.Auth;
 
 public class GoogleTokenValidator(
     IOptions<GoogleAuthSettings> settings,

@@ -22,24 +22,37 @@ When you need project requirements, API contracts, or sync behavior details, fet
 
 ```
 replog-api.sln
-├── replog-api/            # Web API entry point, endpoints, middleware
+├── replog-api/            # Sync Lambda host (push/pull/health)
+├── replog-api-auth/       # Auth Lambda host (login/refresh/logout/health)
+├── replog-api-host/       # Shared web-host bootstrap (JWT, CORS, secrets, exception handler)
 ├── replog-application/    # Business logic, CQRS handlers, validators
 ├── replog-infrastructure/ # DynamoDB repositories, external services
-└── replog-shared/         # DTOs, entities, enums
+├── replog-domain/         # Domain entities
+└── replog-shared/         # DTOs, sync models, enums
 ```
 
 ## Build & Run
 
 ```bash
 dotnet build
+
+# Run the sync host
 dotnet run --project replog-api
+
+# Run the auth host (separate port)
+dotnet run --project replog-api-auth
 ```
 
 ## API Endpoints
 
-| Method | Route             | Description              |
-|--------|-------------------|--------------------------|
-| POST   | `/api/sync/push`  | Push local changes       |
-| GET    | `/api/sync/pull`  | Pull server state        |
+| Method | Route                | Lambda           | Description                      |
+|--------|----------------------|------------------|----------------------------------|
+| POST   | `/api/auth/login`    | replog-api-auth  | Exchange Google ID token for JWT |
+| POST   | `/api/auth/refresh`  | replog-api-auth  | Rotate access + refresh tokens   |
+| POST   | `/api/auth/logout`   | replog-api-auth  | Clear auth cookies               |
+| GET    | `/api/auth/health`   | replog-api-auth  | Auth Lambda health probe         |
+| POST   | `/api/sync/push`     | replog-api       | Push local changes               |
+| GET    | `/api/sync/pull`     | replog-api       | Pull server state                |
+| GET    | `/api/sync/health`   | replog-api       | Sync Lambda health probe         |
 
-All endpoints require a Google JWT bearer token and are rate-limited to 10 requests/minute per user.
+`/api/sync/*` requires a JWT (in the `access_token` cookie or `Authorization: Bearer …` header) and is rate-limited per user.

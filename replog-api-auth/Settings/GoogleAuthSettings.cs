@@ -1,4 +1,4 @@
-namespace replog_api.Settings;
+namespace replog_api_auth.Settings;
 
 public class GoogleAuthSettings
 {

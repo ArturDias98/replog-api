@@ -1,6 +1,6 @@
 using replog_application;
 
-namespace replog_api.Auth;
+namespace replog_api_auth.Auth;
 
 public interface IAuthService
 {
