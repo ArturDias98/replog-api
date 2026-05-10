@@ -1,12 +1,15 @@
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace replog_api_host;
 
 public static class SecretsLoader
 {
     public static async Task LoadFromSecretsManagerAsync(
-        WebApplicationBuilder builder,
+       WebApplicationBuilder builder,
         CancellationToken cancellationToken = default)
     {
         if (!builder.Environment.IsProduction())
