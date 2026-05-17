@@ -25,6 +25,7 @@ replog-api.sln
 ├── replog-api/            # Sync Lambda host (push/pull/health)
 ├── replog-api-auth/       # Auth Lambda host (login/refresh/logout/health)
 ├── replog-api-host/       # Shared web-host bootstrap (JWT, CORS, secrets, exception handler)
+├── replog-api-gateway/    # Local-dev YARP reverse proxy (not deployed)
 ├── replog-application/    # Business logic, CQRS handlers, validators
 ├── replog-infrastructure/ # DynamoDB repositories, external services
 ├── replog-domain/         # Domain entities
@@ -36,12 +37,17 @@ replog-api.sln
 ```bash
 dotnet build
 
-# Run the sync host
+# Run the sync host (port 5139)
 dotnet run --project replog-api
 
-# Run the auth host (separate port)
+# Run the auth host (port 5140)
 dotnet run --project replog-api-auth
+
+# Run the local-dev gateway (port 5000) — single ingress that proxies /api/auth/* and /api/sync/*
+dotnet run --project replog-api-gateway
 ```
+
+In production, API Gateway HTTP API does this routing. Locally, `replog-api-gateway` is a small YARP proxy so the web app can use a single `apiBaseUrl=http://localhost:5000` in dev.
 
 ## API Endpoints
 

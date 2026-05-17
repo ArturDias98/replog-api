@@ -36,6 +36,10 @@ replog-api.sln
 │   ├── JwtAuthExtensions.cs             # AddReplogJwtBearer (cookie → bearer)
 │   └── SecretsLoader.cs                 # AWS Secrets Manager → IConfiguration at cold start
 │
+├── replog-api-gateway/                  # Local-dev YARP reverse proxy (not deployed)
+│   ├── Program.cs                       # Thin host: AddReverseProxy + MapReverseProxy
+│   └── appsettings.Development.json     # Routes /api/auth/* → :5140, /api/sync/* → :5139
+│
 ├── replog-domain/                       # Domain entities (no dependencies)
 │   └── Entities/                        # WorkoutEntity, MuscleGroupEntity, ExerciseEntity, LogEntity
 │
@@ -102,6 +106,7 @@ replog-api.sln
 - **replog-api**: Sync Lambda host. Hosts `/api/sync/*` and `/api/sync/health`. References `replog-api-host`, `replog-application`, `replog-infrastructure`.
 - **replog-api-auth**: Auth Lambda host. Hosts `/api/auth/*` and `/api/auth/health`. References `replog-api-host`, `replog-application` (for `IUserRepository`), `replog-infrastructure`.
 - **replog-api-host**: Shared web-host bootstrap library. JWT bearer setup, CORS, secrets loader, exception middleware, parameterised health endpoint, JWT settings. Both Lambda hosts depend on it.
+- **replog-api-gateway**: Local-development YARP reverse proxy on `http://localhost:5000`. Routes `/api/auth/*` to the auth host (`:5140`) and `/api/sync/*` to the sync host (`:5139`) so the web app can use a single `API_BASE_URL` in dev, mirroring the production API Gateway. **Not packaged or deployed to AWS** — production uses API Gateway HTTP API for the same routing.
 - **replog-domain**: Domain entities (`WorkoutEntity`, `MuscleGroupEntity`, `ExerciseEntity`, `LogEntity`, `UserEntity`). No project dependencies.
 - **replog-shared**: Lightweight library with no project dependencies. Contains models shared across projects (API response/request DTOs, sync models, enums). Referenced by all other projects.
 - **replog-application**: Defines interfaces (`IRepository`), command/query models (CQRS pattern), validators, and change processors. References `replog-domain` and `replog-shared`. No infrastructure dependencies.
@@ -151,6 +156,9 @@ dotnet run --project replog-api
 
 # Run the auth API host
 dotnet run --project replog-api-auth
+
+# Run the local-dev gateway (single ingress on :5000 → forwards to auth + sync hosts)
+dotnet run --project replog-api-gateway
 ```
 
 ## Testing
