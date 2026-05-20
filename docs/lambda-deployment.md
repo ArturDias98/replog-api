@@ -44,7 +44,7 @@ Both functions share the same defaults (override per function as needs diverge).
 
 | Setting | Value |
 | --- | --- |
-| Runtime | `dotnet8` (managed) |
+| Runtime | `dotnet10` (managed) |
 | Architecture | `x86_64` (or `arm64` for ~20% cheaper / faster) |
 | Memory | 1024 MB |
 | Timeout | 30 s |

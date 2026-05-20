@@ -1,6 +1,6 @@
 # Replog API
 
-Workout logging REST API built with .NET 9 and Clean Architecture.
+Workout logging REST API built with .NET 10 and Clean Architecture.
 
 > Work in progress
 
@@ -11,7 +11,7 @@ When you need project requirements, API contracts, or sync behavior details, fet
 
 ## Tech Stack
 
-- .NET 9 / C# 13
+- .NET 10 / C# 14
 - ASP.NET Core Minimal APIs
 - AWS DynamoDB
 - Google JWT Authentication

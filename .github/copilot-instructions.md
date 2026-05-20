@@ -1,6 +1,6 @@
 # Replog API
 
-Workout logging REST API built with .NET 9 following Clean Architecture.
+Workout logging REST API built with .NET 10 following Clean Architecture.
 
 ## Project Documentation
 
@@ -133,7 +133,7 @@ No reverse dependencies. Application layer must never reference Infrastructure o
 
 ## Tech Stack
 
-- .NET 9 / C# 13
+- .NET 10 / C# 14
 - ASP.NET Core Web API (minimal APIs)
 - Amazon DynamoDB (via AWSSDK.DynamoDBv2)
 - FluentValidation for input validation
