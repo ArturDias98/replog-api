@@ -22,22 +22,26 @@ replog-api.sln
 │   └── Program.cs                       # App configuration entry point
 │
 ├── replog-api-auth/                     # Auth Lambda host — login/refresh/logout/health
-│   ├── Auth/                            # AuthService, TokenService, GoogleTokenValidator
+│   ├── Auth/                            # AuthService, TokenService, GoogleTokenValidator, SecretsLoader
 │   ├── Endpoints/                       # AuthEndpoints
 │   ├── Settings/                        # GoogleAuthSettings
 │   └── Program.cs
 │
-├── replog-api-host/                     # Shared web-host bootstrap (class library)
+├── replog-api-auth-core/                # Shared auth primitives (no ASP.NET / no infra deps)
+│   ├── JwtSettings.cs                   # JWT config POCO
+│   └── AccessTokenValidator.cs          # HS256 validation — used by auth host, authorizer, dev gateway
+│
+├── replog-api-host/                     # Shared web-host bootstrap (class library, no auth deps)
 │   ├── Auth/                            # UserClaimsExtensions
 │   ├── Endpoints/                       # HealthEndpointExtensions (parameterised by path)
 │   ├── Middleware/                      # GlobalExceptionHandler
-│   ├── Settings/                        # JwtSettings
-│   ├── CorsExtensions.cs                # AddReplogCors
-│   ├── JwtAuthExtensions.cs             # AddReplogJwtBearer (cookie → bearer)
-│   └── SecretsLoader.cs                 # AWS Secrets Manager → IConfiguration at cold start
+│   └── CorsExtensions.cs                # AddReplogCors
+│
+├── replog-api-authorizer/               # API Gateway REQUEST authorizer Lambda
+│   └── Function.cs                      # Validates access_token cookie → returns userId context
 │
 ├── replog-api-gateway/                  # Local-dev YARP reverse proxy (not deployed)
-│   ├── Program.cs                       # Thin host: AddReverseProxy + MapReverseProxy
+│   ├── Program.cs                       # Thin host: AddReverseProxy + MapReverseProxy + dev x-user-id injection
 │   └── appsettings.Development.json     # Routes /api/auth/* → :5140, /api/sync/* → :5139
 │
 ├── replog-domain/                       # Domain entities (no dependencies)
@@ -103,9 +107,11 @@ replog-api.sln
 
 ### Project Responsibilities
 
-- **replog-api**: Sync Lambda host. Hosts `/api/sync/*` and `/api/sync/health`. References `replog-api-host`, `replog-application`, `replog-infrastructure`.
-- **replog-api-auth**: Auth Lambda host. Hosts `/api/auth/*` and `/api/auth/health`. References `replog-api-host`, `replog-application` (for `IUserRepository`), `replog-infrastructure`.
-- **replog-api-host**: Shared web-host bootstrap library. JWT bearer setup, CORS, secrets loader, exception middleware, parameterised health endpoint, JWT settings. Both Lambda hosts depend on it.
+- **replog-api**: Sync Lambda host. Hosts `/api/sync/*` and `/api/sync/health`. **Carries no auth** — it trusts the `x-user-id` header injected by the gateway authorizer (`TrustedUserMiddleware`) and holds no JWT secret. References `replog-api-host`, `replog-application`, `replog-infrastructure`.
+- **replog-api-auth**: Auth Lambda host. Hosts `/api/auth/*` and `/api/auth/health`. Issues/rotates JWTs; owns `SecretsLoader` (loads JWT + Google secrets at cold start). References `replog-api-host`, `replog-api-auth-core`, `replog-application` (for `IUserRepository`), `replog-infrastructure`.
+- **replog-api-auth-core**: Lean shared auth primitives — `JwtSettings` + `AccessTokenValidator` (HS256 validation). One package (`System.IdentityModel.Tokens.Jwt`), no ASP.NET/infra deps. Referenced by the auth host, authorizer, and dev gateway.
+- **replog-api-authorizer**: API Gateway HTTP API REQUEST authorizer Lambda (plain class library, not ASP.NET). Validates the `access_token` cookie with the shared `AccessTokenValidator` and returns `userId` as authorizer context for `/api/sync/*`. References `replog-api-auth-core` only.
+- **replog-api-host**: Shared **web-host bootstrap** library (no auth). CORS, exception middleware, parameterised health endpoint, `GetUserId`. Referenced by both Lambda hosts.
 - **replog-api-gateway**: Local-development YARP reverse proxy on `http://localhost:5000`. Routes `/api/auth/*` to the auth host (`:5140`) and `/api/sync/*` to the sync host (`:5139`) so the web app can use a single `API_BASE_URL` in dev, mirroring the production API Gateway. **Not packaged or deployed to AWS** — production uses API Gateway HTTP API for the same routing.
 - **replog-domain**: Domain entities (`WorkoutEntity`, `MuscleGroupEntity`, `ExerciseEntity`, `LogEntity`, `UserEntity`). No project dependencies.
 - **replog-shared**: Lightweight library with no project dependencies. Contains models shared across projects (API response/request DTOs, sync models, enums). Referenced by all other projects.
@@ -124,9 +130,11 @@ replog-domain        (no dependencies)
 replog-shared        (no dependencies)
 replog-application   → replog-domain, replog-shared
 replog-infrastructure → replog-application, replog-shared
+replog-api-auth-core (no project deps; System.IdentityModel.Tokens.Jwt only)
 replog-api-host      → replog-infrastructure, replog-shared
 replog-api           → replog-api-host, replog-application, replog-infrastructure, replog-shared
-replog-api-auth      → replog-api-host, replog-application, replog-infrastructure, replog-shared
+replog-api-auth      → replog-api-host, replog-api-auth-core, replog-application, replog-infrastructure, replog-shared
+replog-api-authorizer → replog-api-auth-core
 ```
 
 No reverse dependencies. Application layer must never reference Infrastructure or any host.
@@ -188,7 +196,7 @@ dotnet test replog-api-auth.tests
 
 ## Security
 
-- **Authentication**: Custom JWT (HS256) issued by the **auth Lambda** (`replog-api-auth`) after validating a Google ID token. The **sync Lambda** (`replog-api`) verifies that JWT locally on every `/api/sync/*` request — both Lambdas share the same signing secret. Protected endpoints require the token in the `access_token` cookie (or `Authorization: Bearer <token>` header). Auth endpoints (`/api/auth/*`) are public.
+- **Authentication**: Custom JWT (HS256) issued by the **auth Lambda** (`replog-api-auth`) after validating a Google ID token. `/api/sync/*` is authenticated **at the API Gateway** by a REQUEST Lambda authorizer (`replog-api-authorizer`) that validates the `access_token` cookie and injects a trusted `x-user-id` header; the sync Lambda performs no token validation and holds no signing secret. Auth endpoints (`/api/auth/*`) and health routes are public. Locally, the YARP gateway (`replog-api-gateway`) injects `x-user-id` to mirror the authorizer.
 - **Ownership validation**: Every repository write operation (create, update, delete) must include `userId` in the DynamoDB `ConditionExpression` to enforce data ownership. A user must never be able to read or modify another user's data.
 - **Rate limiting**: Fixed window per user (configurable via `RateLimiter:PermitLimit` in appsettings).
 - **CORS**: Restricted to `localhost:4200` (dev) and `replog.adrvcode.com` (prod). Only `GET` and `POST` methods allowed.
@@ -216,13 +224,15 @@ dotnet test replog-api-auth.tests
 | Auth host entry point | `replog-api-auth/Program.cs` |
 | Auth endpoints | `replog-api-auth/Endpoints/AuthEndpoints.cs` |
 | Sync endpoints | `replog-api/Endpoints/SyncEndpoints.cs` |
-| Shared JWT bearer setup | `replog-api-host/JwtAuthExtensions.cs` |
+| Gateway authorizer Lambda | `replog-api-authorizer/Function.cs` |
+| Trusted user middleware (sync) | `replog-api/Middleware/TrustedUserMiddleware.cs` |
+| Shared access-token validator | `replog-api-auth-core/AccessTokenValidator.cs` |
+| JWT settings | `replog-api-auth-core/JwtSettings.cs` |
 | Shared CORS setup | `replog-api-host/CorsExtensions.cs` |
 | Shared health endpoint | `replog-api-host/Endpoints/HealthEndpointExtensions.cs` |
 | Shared exception middleware | `replog-api-host/Middleware/GlobalExceptionHandler.cs` |
-| Secrets Manager loader | `replog-api-host/SecretsLoader.cs` |
+| Secrets Manager loader | `replog-api-auth/Auth/SecretsLoader.cs` |
 | User ID extraction | `replog-api-host/Auth/UserClaimsExtensions.cs` |
-| JWT settings | `replog-api-host/Settings/JwtSettings.cs` |
 | Auth service | `replog-api-auth/Auth/AuthService.cs` |
 | Token service | `replog-api-auth/Auth/TokenService.cs` |
 | Google token validator | `replog-api-auth/Auth/GoogleTokenValidator.cs` |

@@ -1,29 +1,25 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <RootNamespace>replog_api_auth</RootNamespace>
-        <UserSecretsId>2c9a16e8-7e64-4c20-9a0f-3a36b4d1f077</UserSecretsId>
+        <RootNamespace>replog_api_authorizer</RootNamespace>
+        <AssemblyName>replog-api-authorizer</AssemblyName>
         <AWSProjectType>Lambda</AWSProjectType>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.7.2" />
         <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0" />
+        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
         <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.4" />
-        <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\replog-api-auth-core\replog-api-auth-core.csproj" />
-        <ProjectReference Include="..\replog-api-host\replog-api-host.csproj" />
-        <ProjectReference Include="..\replog-application\replog-application.csproj" />
-        <ProjectReference Include="..\replog-infrastructure\replog-infrastructure.csproj" />
-        <ProjectReference Include="..\replog-shared\replog-shared.csproj" />
     </ItemGroup>
 
 </Project>

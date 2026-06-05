@@ -1,6 +1,6 @@
 # Lambda Deployment Guide
 
-How the replog backend is packaged and deployed as two AWS Lambda functions behind one API Gateway HTTP API (v2). This document is the contract for the infrastructure repo that owns the CloudFormation stack.
+How the replog backend is packaged and deployed as three AWS Lambda functions behind one API Gateway HTTP API (v2). This document is the contract for the infrastructure repo that owns the CloudFormation stack.
 
 ## Architecture
 
@@ -8,12 +8,13 @@ How the replog backend is packaged and deployed as two AWS Lambda functions behi
 client → API Gateway (HTTP API v2)
            ├── /api/auth/*   → Lambda (replog-api-auth) → DynamoDB
            │                                            → Google OAuth (login)
-           └── /api/sync/*   → Lambda (replog-api)      → DynamoDB
+           └── /api/sync/*   → [REQUEST authorizer: replog-api-authorizer]
+                             → Lambda (replog-api)      → DynamoDB
 ```
 
-Each Lambda boots its own ASP.NET Core pipeline (middleware, JWT auth, CORS, endpoints) via `Amazon.Lambda.AspNetCoreServer.Hosting`. Shared bootstrap (JWT bearer config, CORS, exception handler, secrets loader, health endpoint) lives in the `replog-api-host` class library, so each `Program.cs` stays small.
+The auth and sync Lambdas boot an ASP.NET Core pipeline via `Amazon.Lambda.AspNetCoreServer.Hosting`. Shared **web** bootstrap (CORS, exception handler, health endpoint, `GetUserId`) lives in the auth-free `replog-api-host` class library; shared **auth** primitives (`JwtSettings`, `AccessTokenValidator`) live in the lean `replog-api-auth-core` library used by the auth host, the authorizer, and the dev gateway.
 
-The auth Lambda issues JWTs at `/api/auth/login` and `/api/auth/refresh`. The sync Lambda receives those JWTs via the `access_token` cookie and verifies them locally — both Lambdas share the same HS256 signing secret (see "Required Environment Variables").
+The auth Lambda issues JWTs at `/api/auth/login` and `/api/auth/refresh`. Requests to `/api/sync/*` are authenticated **at the gateway** by the `replog-api-authorizer` Lambda (a REQUEST authorizer): it validates the `access_token` cookie with the shared HS256 secret and returns the user id as authorizer context. API Gateway maps that id into an `overwrite:header.x-user-id` request parameter, and the sync Lambda simply trusts that header — it performs **no token validation** and holds **no JWT secret**. Health routes (`/api/*/health`) and the public auth routes are not behind the authorizer.
 
 ## Local vs Lambda
 
@@ -34,58 +35,59 @@ dotnet lambda package -pl replog-api -c Release -o bin/Release/replog-api.zip
 
 # Auth Lambda
 dotnet lambda package -pl replog-api-auth -c Release -o bin/Release/replog-api-auth.zip
+
+# Authorizer Lambda
+dotnet lambda package -pl replog-api-authorizer -c Release -o bin/Release/replog-api-authorizer.zip
 ```
 
-CI does both via a matrix over `[replog-api, replog-api-auth]` in `.github/workflows/deploy.yml`.
+CI does all three via a matrix over `[replog-api, replog-api-auth, replog-api-authorizer]` in `.github/workflows/deploy.yml`.
 
 ## Function Configuration
 
-Both functions share the same defaults (override per function as needs diverge).
+| Setting | replog-api / replog-api-auth | replog-api-authorizer |
+| --- | --- | --- |
+| Runtime | `dotnet10` (managed) | `dotnet10` (managed) |
+| Architecture | `x86_64` | `x86_64` |
+| Memory | 1024 MB | 512 MB |
+| Timeout | 30 s | 10 s |
+| Handler | assembly name (required by `AddAWSLambdaHosting`) | `replog-api-authorizer::replog_api_authorizer.Function::FunctionHandler` |
 
-| Setting | Value |
-| --- | --- |
-| Runtime | `dotnet10` (managed) |
-| Architecture | `x86_64` (or `arm64` for ~20% cheaper / faster) |
-| Memory | 1024 MB |
-| Timeout | 30 s |
-| Handler | assembly name (`replog-api` or `replog-api-auth`) — required by `AddAWSLambdaHosting` |
-
-Defaults live in each project's `aws-lambda-tools-defaults.json`.
+The authorizer is a plain class-library Lambda (not ASP.NET), so its handler is the full `Assembly::Type::Method` form. Defaults live in each project's `aws-lambda-tools-defaults.json`.
 
 ## Required Environment Variables
 
-| Variable | replog-api-auth | replog-api (sync) | Notes |
-| --- | --- | --- | --- |
-| `JWT_SECRET_ARN` | required | required | ARN of the Secrets Manager secret holding the JWT HS256 signing key. Both Lambdas need it: auth signs, sync verifies. Resolved at cold start by [`SecretsLoader`](../replog-api-host/SecretsLoader.cs) and bound to `Jwt:Secret`. |
-| `GOOGLE_CLIENT_ID_ARN` | required | — | ARN of the Secrets Manager secret holding the Google OAuth client ID. Auth-only. Bound to `Google:ClientId`. |
-| `Jwt__Issuer` | `replog-api` | `replog-api` | default |
-| `Jwt__Audience` | `replog-client` | `replog-client` | default |
-| `Jwt__AccessTokenExpirationMinutes` | `15` | — | sync host doesn't issue tokens |
-| `Jwt__RefreshTokenExpirationDays` | `30` | — | sync host doesn't issue tokens |
-| `Jwt__AccessTokenCookieExpirationDays` | `30` | — | sync host doesn't issue tokens |
-| `Jwt__RefreshTokenCookieExpirationDays` | `30` | — | sync host doesn't issue tokens |
-| `DynamoDB__Region` | required | required | e.g. `us-east-1` |
-| `DynamoDB__TableName` | required | required | `replog-workouts` |
-| `DynamoDB__UsersTableName` | required | required | `replog-users` |
-| `RateLimiter__PermitLimit` | — | optional | per-user requests/minute on `/api/sync/*` |
-| `ASPNETCORE_ENVIRONMENT` | `Production` | `Production` | gates the Secrets Manager fetch |
+| Variable | replog-api-auth | replog-api-authorizer | replog-api (sync) | Notes |
+| --- | --- | --- | --- | --- |
+| `JWT_SECRET_ARN` | required | required | — | ARN of the Secrets Manager secret holding the JWT HS256 signing key. Auth signs; the authorizer verifies. The **sync Lambda no longer needs it** — auth happens at the gateway. |
+| `GOOGLE_CLIENT_ID_ARN` | required | — | — | ARN of the Google OAuth client-id secret. Auth-only. Bound to `Google:ClientId`. |
+| `Jwt__Issuer` | `replog-api` | `replog-api` | — | default |
+| `Jwt__Audience` | `replog-client` | `replog-client` | — | default |
+| `Jwt__AccessTokenExpirationMinutes` | `15` | — | — | auth issues tokens |
+| `Jwt__RefreshTokenExpirationDays` | `30` | — | — | auth issues tokens |
+| `Jwt__AccessTokenCookieExpirationDays` | `30` | — | — | auth issues tokens |
+| `Jwt__RefreshTokenCookieExpirationDays` | `30` | — | — | auth issues tokens |
+| `DynamoDB__Region` | required | — | required | e.g. `us-east-1` |
+| `DynamoDB__TableName` | required | — | required | `replog-workouts` |
+| `DynamoDB__UsersTableName` | required | — | required | `replog-users` |
+| `RateLimiter__PermitLimit` | — | — | optional | per-user requests/minute on `/api/sync/*` |
+| `ASPNETCORE_ENVIRONMENT` | `Production` | — | `Production` | gates the auth host's Secrets Manager fetch |
 
-Double-underscore (`__`) maps to ASP.NET configuration section delimiter (`Jwt:Secret`, etc.).
+Double-underscore (`__`) maps to the ASP.NET configuration section delimiter (`Jwt:Secret`, etc.).
 
-Secrets are stored in AWS Secrets Manager as plain text (`SecretString`). Each Lambda fetches them at cold start using its execution-role credentials — so the `SecretsManagerReadPolicy` IAM block in the CloudFormation stack must grant `secretsmanager:GetSecretValue` on the ARNs each function needs (auth needs both; sync only needs `JWT_SECRET_ARN`). Resolution is gated on `ASPNETCORE_ENVIRONMENT=Production`; in any other environment `SecretsLoader` is a no-op and `Jwt:Secret` / `Google:ClientId` come from `appsettings.{Environment}.json` as before. Secret rotation propagates on the next cold start with no redeploy needed.
+Secrets are stored in AWS Secrets Manager as plain text (`SecretString`). The auth Lambda resolves them at cold start via [`SecretsLoader`](../replog-api-auth/Auth/SecretsLoader.cs) (gated on `ASPNETCORE_ENVIRONMENT=Production`); the authorizer resolves `JWT_SECRET_ARN` directly at cold start. The `SecretsManagerReadPolicy` IAM block must grant `secretsmanager:GetSecretValue` on the ARNs each function needs (auth: both; authorizer: `JWT_SECRET_ARN`; **sync: none**). Secret rotation propagates on the next cold start with no redeploy needed.
 
 ## API Gateway (HTTP API v2) Routing
 
-Two integrations — one per Lambda. Routes:
+Two integrations — one per ASP.NET Lambda. Routes:
 
-| Route | Integration |
-| --- | --- |
-| `ANY /api/auth/{proxy+}` | replog-api-auth |
-| `GET /api/auth/health` | replog-api-auth |
-| `ANY /api/sync/{proxy+}` | replog-api |
-| `GET /api/sync/health` | replog-api |
+| Route | Integration | Authorizer |
+| --- | --- | --- |
+| `ANY /api/auth/{proxy+}` | replog-api-auth | none (public) |
+| `GET /api/auth/health` | replog-api-auth | none (public) |
+| `ANY /api/sync/{proxy+}` | replog-api | **replog-sync-authorizer** (CUSTOM) |
+| `GET /api/sync/health` | replog-api | none (public) |
 
-Each integration also needs a `lambda:InvokeFunction` permission scoped to the API Gateway source ARN.
+The `replog-sync-authorizer` is an `AWS::ApiGatewayV2::Authorizer` of type `REQUEST` (`AuthorizerPayloadFormatVersion: 2.0`, `EnableSimpleResponses: true`, `IdentitySource: $request.header.Cookie`, `AuthorizerResultTtlInSeconds: 0`). The sync integration carries `RequestParameters: { "overwrite:header.x-user-id": "$context.authorizer.userId" }`. Each integration and the authorizer need a `lambda:InvokeFunction` permission for `apigateway.amazonaws.com`.
 
 CORS (must allow credentials so cookies flow):
 
@@ -101,20 +103,25 @@ Throttling: stage-level default 100 RPS / burst 200 is a reasonable starting poi
 
 ## IAM Permissions for the Lambda Execution Roles
 
-The two functions can share one role (same DynamoDB tables and Secrets Manager ARNs), or be split into two least-privilege roles — the sync function does not need `secretsmanager:GetSecretValue` on the Google client ID ARN.
+All three functions currently share one execution role for simplicity. Splitting into least-privilege roles is a future tightening (the authorizer needs only `secretsmanager:GetSecretValue` on `JWT_SECRET_ARN` + logs; the sync function needs only DynamoDB + logs and **no** Secrets Manager access).
 
-Common permissions for both:
+DynamoDB R/W (auth + sync):
+
 - `dynamodb:GetItem`, `PutItem`, `UpdateItem`, `DeleteItem`, `Query`, `BatchWriteItem`, `TransactWriteItems`, `DescribeTable` on the `replog-workouts` table + its `UserIdIndex` GSI
 - Same R/W on `replog-users`
-- `logs:CreateLogGroup`, `CreateLogStream`, `PutLogEvents` (or use the AWSLambdaBasicExecutionRole managed policy)
-- `secretsmanager:GetSecretValue` on `JWT_SECRET_ARN`
 
-Auth-only:
-- `secretsmanager:GetSecretValue` on `GOOGLE_CLIENT_ID_ARN`
+Logs (all three):
+
+- `logs:CreateLogGroup`, `CreateLogStream`, `PutLogEvents` (or the AWSLambdaBasicExecutionRole managed policy)
+
+Secrets Manager:
+
+- `secretsmanager:GetSecretValue` on `JWT_SECRET_ARN` (auth + authorizer)
+- `secretsmanager:GetSecretValue` on `GOOGLE_CLIENT_ID_ARN` (auth only)
 
 ## Logging & Monitoring
 
-- One CloudWatch log group per function (`/aws/lambda/replog-api-auth`, `/aws/lambda/replog-api`) with 14-day retention.
+- One CloudWatch log group per function (`/aws/lambda/replog-api-auth`, `/aws/lambda/replog-api`, `/aws/lambda/replog-api-authorizer`) with 14-day retention.
 - Recommended alarms per function: API Gateway 5xx rate, Lambda error rate, Lambda throttle rate, Lambda duration p99 above 5 s.
 
 ## Health Checks

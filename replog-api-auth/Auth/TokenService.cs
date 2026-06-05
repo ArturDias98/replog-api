@@ -2,16 +2,16 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using replog_api_host.Settings;
+using replog_api_auth_core;
 
 namespace replog_api_auth.Auth;
 
-public class TokenService(IOptions<JwtSettings> settings, ILogger<TokenService> logger) : ITokenService
+public class TokenService(IOptions<JwtSettings> settings) : ITokenService
 {
     private readonly JwtSettings _settings = settings.Value;
+    private readonly AccessTokenValidator _validator = new(settings.Value);
 
     public string GenerateAccessToken(string userId, string email, string displayName, string? avatarUrl)
     {
@@ -53,30 +53,6 @@ public class TokenService(IOptions<JwtSettings> settings, ILogger<TokenService> 
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
-    public string? GetUserIdFromExpiredToken(string token)
-    {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Secret));
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        try
-        {
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = _settings.Issuer,
-                ValidateAudience = true,
-                ValidAudience = _settings.Audience,
-                ValidateLifetime = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = key
-            }, out _);
-
-            return principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Token validation threw an unexpected exception: {Message}", ex.Message);
-            return null;
-        }
-    }
+    public string? GetUserIdFromExpiredToken(string token) =>
+        _validator.GetUserId(token, validateLifetime: false);
 }

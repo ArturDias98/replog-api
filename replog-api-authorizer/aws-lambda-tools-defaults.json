@@ -1,0 +1,15 @@
+{
+  "Information": [
+    "This file provides default values for the deployment wizard inside Visual Studio and the AWS Lambda commands added to the .NET Core CLI.",
+    "Run 'dotnet lambda help' for available commands.",
+    "Run 'dotnet lambda package -c Release -o bin/Release/replog-api-authorizer.zip' to produce a deployment artifact for the infra repo to consume."
+  ],
+  "profile": "default",
+  "region": "us-east-1",
+  "configuration": "Release",
+  "function-runtime": "dotnet10",
+  "function-architecture": "x86_64",
+  "function-memory-size": 512,
+  "function-timeout": 10,
+  "function-handler": "replog-api-authorizer::replog_api_authorizer.Function::FunctionHandler"
+}

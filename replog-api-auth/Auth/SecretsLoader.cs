@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace replog_api_host;
+namespace replog_api_auth.Auth;
 
 public static class SecretsLoader
 {

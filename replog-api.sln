@@ -39,6 +39,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. gateway", "4. gateway", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-api-gateway", "replog-api-gateway\replog-api-gateway.csproj", "{40B34375-5DD8-4356-98F9-B125DDC5EC0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-api-authorizer", "replog-api-authorizer\replog-api-authorizer.csproj", "{25CD9A60-850A-4E64-A9AC-149EAA14396D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "replog-api-auth-core", "replog-api-auth-core\replog-api-auth-core.csproj", "{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -205,6 +209,30 @@ Global
 		{40B34375-5DD8-4356-98F9-B125DDC5EC0E}.Release|x64.Build.0 = Release|Any CPU
 		{40B34375-5DD8-4356-98F9-B125DDC5EC0E}.Release|x86.ActiveCfg = Release|Any CPU
 		{40B34375-5DD8-4356-98F9-B125DDC5EC0E}.Release|x86.Build.0 = Release|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Debug|x64.Build.0 = Debug|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Debug|x86.Build.0 = Debug|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Release|x64.ActiveCfg = Release|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Release|x64.Build.0 = Release|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Release|x86.ActiveCfg = Release|Any CPU
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D}.Release|x86.Build.0 = Release|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Debug|x64.Build.0 = Debug|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Debug|x86.Build.0 = Debug|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Release|x64.ActiveCfg = Release|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Release|x64.Build.0 = Release|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Release|x86.ActiveCfg = Release|Any CPU
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -223,6 +251,8 @@ Global
 		{035BCA78-326D-4DF0-A193-0ADE033C4301} = {5926D5B0-0931-4C43-80C3-C822B7558297}
 		{E87184DD-D4C2-44F0-9FC0-341E0930E9E5} = {D2D31961-9576-4768-970C-6D69B5151F55}
 		{40B34375-5DD8-4356-98F9-B125DDC5EC0E} = {2B5E76B5-928A-4B01-8DBB-44275250DAE2}
+		{25CD9A60-850A-4E64-A9AC-149EAA14396D} = {5926D5B0-0931-4C43-80C3-C822B7558297}
+		{00AB0CFA-9D2E-4EB1-8E25-5871F5F47A93} = {7FC7A6D7-1D36-48F6-8E9B-5280320426AB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7E2010A6-0A10-4B0F-A62C-43F24BA9C4A7}

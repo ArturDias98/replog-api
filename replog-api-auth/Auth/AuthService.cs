@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Options;
-using replog_api_host.Settings;
+using replog_api_auth_core;
 using replog_application;
 using replog_application.Interfaces;
 using replog_domain.Entities;

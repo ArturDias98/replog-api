@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Amazon.Lambda.AspNetCoreServer.Hosting;
 using replog_api.Endpoints;
+using replog_api.Middleware;
 using replog_api_host;
 using replog_api_host.Endpoints;
 using replog_api_host.Middleware;
@@ -15,11 +16,6 @@ if (builder.Environment.IsDevelopment())
     builder.Logging.AddConsole();
 else
     builder.Logging.AddJsonConsole();
-
-await SecretsLoader.LoadFromSecretsManagerAsync(builder);
-
-builder.Services.AddReplogJwtBearer(builder.Configuration);
-builder.Services.AddAuthorization();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -47,8 +43,8 @@ var app = builder.Build();
 app.UseMiddleware<GlobalExceptionHandler>();
 app.UseHttpsRedirection();
 app.UseCors();
-app.UseAuthentication();
-app.UseAuthorization();
+// Authentication happens at the gateway; trust the injected x-user-id header.
+app.UseMiddleware<TrustedUserMiddleware>();
 app.UseRateLimiter();
 
 app.MapSyncEndpoints();

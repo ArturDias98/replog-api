@@ -2,6 +2,7 @@ using Amazon.Lambda.AspNetCoreServer.Hosting;
 using replog_api_auth.Auth;
 using replog_api_auth.Endpoints;
 using replog_api_auth.Settings;
+using replog_api_auth_core;
 using replog_api_host;
 using replog_api_host.Endpoints;
 using replog_api_host.Middleware;
@@ -17,8 +18,7 @@ else
 
 await SecretsLoader.LoadFromSecretsManagerAsync(builder);
 
-builder.Services.AddReplogJwtBearer(builder.Configuration);
-builder.Services.AddAuthorization();
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
 builder.Services.AddReplogCors(builder.Environment);
 
@@ -36,8 +36,6 @@ var app = builder.Build();
 app.UseMiddleware<GlobalExceptionHandler>();
 app.UseHttpsRedirection();
 app.UseCors();
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapHealthEndpoint("/api/auth/health");

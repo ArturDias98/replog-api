@@ -11,4 +11,10 @@
         <PackageReference Include="Yarp.ReverseProxy" Version="2.2.0" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- Dev-only: reuse the shared AccessTokenValidator so local auth mirrors
+             the production API Gateway authorizer. The gateway is never deployed. -->
+        <ProjectReference Include="..\replog-api-auth-core\replog-api-auth-core.csproj" />
+    </ItemGroup>
+
 </Project>

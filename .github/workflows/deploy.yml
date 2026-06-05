@@ -38,8 +38,9 @@ jobs:
       fail-fast: false
       matrix:
         function:
-          - { project: replog-api,      name: replog-api }
-          - { project: replog-api-auth, name: replog-api-auth }
+          - { project: replog-api,            name: replog-api,            handler: replog-api,            memory: 1024, timeout: 30 }
+          - { project: replog-api-auth,       name: replog-api-auth,       handler: replog-api-auth,       memory: 1024, timeout: 30 }
+          - { project: replog-api-authorizer, name: replog-api-authorizer, handler: "replog-api-authorizer::replog_api_authorizer.Function::FunctionHandler", memory: 512, timeout: 10 }
 
     steps:
       - name: Checkout
@@ -71,9 +72,9 @@ jobs:
           aws lambda update-function-configuration \
             --function-name ${{ matrix.function.name }} \
             --runtime dotnet10 \
-            --handler ${{ matrix.function.project }} \
-            --memory-size 1024 \
-            --timeout 30
+            --handler "${{ matrix.function.handler }}" \
+            --memory-size ${{ matrix.function.memory }} \
+            --timeout ${{ matrix.function.timeout }}
           aws lambda wait function-updated \
             --function-name ${{ matrix.function.name }}
 

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 using replog_api_auth.Auth;
-using replog_api_host.Settings;
+using replog_api_auth_core;
 using replog_shared.Models.Requests;
 using replog_shared.Models.Responses;
 

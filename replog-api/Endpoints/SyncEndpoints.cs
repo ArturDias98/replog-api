@@ -13,7 +13,6 @@ public static class SyncEndpoints
     public static void MapSyncEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/sync")
-            .RequireAuthorization()
             .RequireRateLimiting("sync");
 
         group.MapPost("/push", async (

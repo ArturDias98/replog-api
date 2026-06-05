@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using replog_api_auth.Auth;
-using replog_api_host.Settings;
+using replog_api_auth_core;
 using replog_application.Interfaces;
 using replog_domain.Entities;
 
