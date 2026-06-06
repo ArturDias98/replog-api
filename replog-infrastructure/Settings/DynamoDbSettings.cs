@@ -2,7 +2,7 @@ namespace replog_infrastructure.Settings;
 
 public class DynamoDbSettings
 {
-    public string Region { get; set; } = "us-east-1";
+    public string Region { get; set; } = "sa-east-1";
     public string? ServiceURL { get; set; }
     public string TableName { get; set; } = "replog-workouts";
     public string UsersTableName { get; set; } = "replog-users";
