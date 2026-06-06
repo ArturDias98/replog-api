@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: sa-east-1
   DOTNET_VERSION: '10.0.x'
 
 jobs:
