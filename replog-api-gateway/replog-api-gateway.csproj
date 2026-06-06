@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>replog_api_gateway</RootNamespace>
+        <UserSecretsId>04286ad9-aaa7-493c-9938-55c3aac9847b</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>

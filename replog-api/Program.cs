@@ -41,7 +41,6 @@ builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionHandler>();
-app.UseHttpsRedirection();
 app.UseCors();
 // Authentication happens at the gateway; trust the injected x-user-id header.
 app.UseMiddleware<TrustedUserMiddleware>();

@@ -34,7 +34,6 @@ builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionHandler>();
-app.UseHttpsRedirection();
 app.UseCors();
 
 app.MapAuthEndpoints();
