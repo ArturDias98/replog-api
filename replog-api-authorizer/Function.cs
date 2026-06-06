@@ -23,6 +23,11 @@ public class Function
         APIGatewayCustomAuthorizerV2Request request,
         ILambdaContext context)
     {
+        // CORS preflight — browsers never send credentials on OPTIONS; let API Gateway
+        // apply its own CorsConfiguration and return the preflight response.
+        if (string.Equals(request.RequestContext?.Http?.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase))
+            return new APIGatewayCustomAuthorizerV2SimpleResponse { IsAuthorized = true };
+
         var token = ExtractAccessToken(request);
         var userId = token is null ? null : Validator.GetUserId(token);
 
