@@ -148,14 +148,10 @@ No reverse dependencies. Application layer must never reference Infrastructure o
 - Google OAuth → custom JWT (HS256) authentication
 - OpenAPI enabled
 - xUnit + Testcontainers for testing
-- Docker Compose for local DynamoDB
 
 ## Build & Run
 
 ```bash
-# Start local DynamoDB
-docker compose up -d
-
 # Build
 dotnet build
 
@@ -184,8 +180,8 @@ dotnet test replog-api.tests
 dotnet test replog-api-auth.tests
 ```
 
-- Infrastructure tests use **Testcontainers** — Docker must be running.
-- `replog-api.tests` and `replog-api-auth.tests` use **WebApplicationFactory** + Testcontainers — Docker must be running.
+- Infrastructure tests use **Testcontainers**.
+- `replog-api.tests` and `replog-api-auth.tests` use **WebApplicationFactory** + Testcontainers.
 - Application tests use mocked dependencies via DI fixture.
 - Shared comparers in `replog-tests-shared` for entity equality assertions.
 - Tests follow the pattern: `MethodName_ShouldExpectedBehavior_WhenCondition`.
@@ -242,7 +238,6 @@ dotnet test replog-api-auth.tests
 | DI (application) | `replog-application/DependencyInjection.cs` |
 | DI (infrastructure) | `replog-infrastructure/DependencyInjection.cs` |
 | Base repository | `replog-infrastructure/Repositories/SyncOperations/BaseSyncRepository.cs` |
-| Docker DynamoDB | `docker-compose.yml` |
 | Test DynamoDB fixture | `replog-tests-shared/Fixtures/DynamoDbFixture.cs` |
 | Sync API test factory | `replog-api.tests/Fixtures/ApiWebApplicationFactory.cs` |
 | Auth API test factory | `replog-api-auth.tests/Fixtures/AuthApiWebApplicationFactory.cs` |
