@@ -12,7 +12,7 @@ Backend specification for the RepLog sync system. This API receives change event
 6. [Authentication & Authorization](#6-authentication--authorization)
 7. [Security](#7-security)
 
-> **Auth endpoints** (`POST /api/auth/login`, `POST /api/auth/refresh`) are documented separately in [`docs/authentication.md`](authentication.md).
+> **Auth endpoints** (`POST /api/auth/login`, `POST /api/auth/refresh`) are documented in [`docs/authentication.md`](https://github.com/ArturDias98/replog-auth/blob/main/docs/authentication.md) in the `replog-api-auth` repository.
 >
 > **Deployment**: the API is split into two AWS Lambda functions (`dotnet10` runtime) behind API Gateway HTTP API (v2) — `replog-api-auth` owns `/api/auth/*` and `replog-api` owns `/api/sync/*`. All endpoints, middleware, auth, and rate limiting documented below apply identically — `Amazon.Lambda.AspNetCoreServer.Hosting` adapts the ASP.NET pipeline to API Gateway events. See [`docs/lambda-deployment.md`](lambda-deployment.md).
 
@@ -628,7 +628,7 @@ flowchart TD
 ### 6.1 Authentication
 
 - Protected endpoints (`/api/sync/*`) require an API-issued access token in the `Authorization` header: `Bearer <accessToken>`.
-- The access token is a signed HS256 JWT obtained by calling `POST /api/auth/login` with a Google ID token. See [`docs/authentication.md`](authentication.md) for the full auth flow.
+- The access token is a signed HS256 JWT obtained by calling `POST /api/auth/login` with a Google ID token. See [`docs/authentication.md`](https://github.com/ArturDias98/replog-api-auth/blob/main/docs/authentication.md) in `replog-api-auth` for the full auth flow.
 - The `userId` is extracted from the `sub` claim of the access token — never from the request body.
 
 ### 6.2 Authorization

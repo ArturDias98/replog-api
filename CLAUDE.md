@@ -4,10 +4,10 @@ Workout logging REST API built with .NET 10 following Clean Architecture.
 
 ## Project Documentation
 
-API documentation lives in the `docs/` directory of this repository:
+API documentation:
 
 - `docs/backend-api.md` — sync API spec (endpoints, request/response shapes, entity processing, conflict resolution)
-- `docs/authentication.md` — auth flow, token details, error codes
+- Auth flow, token details, and error codes → `docs/authentication.md` in the [`replog-auth`](https://github.com/ArturDias98/replog-auth) repository
 
 Read these files directly when you need API contracts or sync behavior details.
 
