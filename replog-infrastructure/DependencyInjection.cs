@@ -32,7 +32,6 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IWorkoutRepository, WorkoutRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IWorkoutSyncRepository, WorkoutSyncRepository>();
         services.AddScoped<IMuscleGroupSyncRepository, MuscleGroupSyncRepository>();
         services.AddScoped<IExerciseSyncRepository, ExerciseSyncRepository>();

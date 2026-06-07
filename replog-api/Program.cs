@@ -2,10 +2,8 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Amazon.Lambda.AspNetCoreServer.Hosting;
 using replog_api.Endpoints;
+using replog_api.Extensions;
 using replog_api.Middleware;
-using replog_api_host;
-using replog_api_host.Endpoints;
-using replog_api_host.Middleware;
 using replog_application;
 using replog_infrastructure;
 

@@ -38,9 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         function:
-          - { project: replog-api,            name: replog-api,            handler: replog-api,            memory: 1024, timeout: 30 }
-          - { project: replog-api-auth,       name: replog-api-auth,       handler: replog-api-auth,       memory: 1024, timeout: 30 }
-          - { project: replog-api-authorizer, name: replog-api-authorizer, handler: "replog-api-authorizer::replog_api_authorizer.Function::FunctionHandler", memory: 512, timeout: 10 }
+          - { project: replog-api, name: replog-api, handler: replog-api, memory: 1024, timeout: 30 }
 
     steps:
       - name: Checkout
